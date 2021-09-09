@@ -1,15 +1,23 @@
 import React, {useState} from 'react'
-import { View, Text, Button, StyleSheet, TextInput } from 'react-native'
-// import { useForm } from 'react-hook-form'
+import { View, Text, Button, StyleSheet, TextInput, ToastAndroid } from 'react-native'
 import { register } from '../services/AuthServices'
 
-export default function Home({ navigation: {navigate} }) {
+export default function Home({ navigation }) {
 
     const [name, setName] = useState('')
     const [dni, setDni] = useState(0);
 
-    const handleSubmit = () => {
-        register(dni, name)
+    const handleSubmit = async () => {
+        const registerResults = await register(dni, name);
+        if(registerResults.message == 'Usuario registrado correctamente!'){
+            ToastAndroid.show(registerResults.message, ToastAndroid.SHORT, ToastAndroid.BOTTOM)
+            setTimeout(() => {
+                navigation.navigate('Login')
+            }, 2000) 
+        } else {
+            ToastAndroid.show(`Error: ${registerResults.message}`, ToastAndroid.SHORT, ToastAndroid.BOTTOM)
+        }
+        
     }
 
     return (
@@ -31,7 +39,7 @@ export default function Home({ navigation: {navigate} }) {
             <Button
                 title="Registrarse"
                 onPress={handleSubmit} />
-            <Text>Tienes una cuenta? <Text onPress={() => navigate('Login')}>Inicia sesión</Text></Text>
+            <Text style={RegisterStyles.linkToLogin}>Tienes una cuenta? <Text onPress={() => navigation.navigate('Login')}>Inicia sesión</Text></Text>
         </View>
     )
 }
@@ -42,7 +50,8 @@ const RegisterStyles = StyleSheet.create({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        height: '100vh'
+        height: '100%',
+        
     },
     inputFields: {
         backgroundColor: '#fff',
@@ -51,5 +60,9 @@ const RegisterStyles = StyleSheet.create({
         color: '#111',
         marginVertical: 10,
         borderRadius: 5
+    },
+    linkToLogin: {
+        color: '#fff',
+        marginTop: 10
     }
 })

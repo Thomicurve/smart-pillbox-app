@@ -1,4 +1,5 @@
 import axios from 'axios'
+
 const apiLink = 'https://smart-pillbox-api.herokuapp.com'
 
 const register = async (dni, name) => {
@@ -10,9 +11,13 @@ const register = async (dni, name) => {
     }
 }
 
-const login = async (dni) => {
+const login = async (dni, token) => {
     try {
-        const {data} = await axios.post(`${apiLink}/login`, {dni});
+        const {data} = await axios.post(`${apiLink}/login`, {dni}, {
+            headers: {
+                "x-access-token": token
+            }
+        });
         return data;
     } catch(err) {
         return err

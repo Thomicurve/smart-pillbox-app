@@ -1,5 +1,5 @@
-import React from 'react'
+import {createContext} from 'react'
 
-// const tokenContext = React.createContext('')
+const TokenContext = createContext({});
+export default TokenContext;
 
-// export default tokenContext;

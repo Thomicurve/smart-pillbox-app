@@ -2,9 +2,7 @@ import React from 'react'
 import { View, Text, Image, StyleSheet, Dimensions, FlatList } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient';
 import GradientColor from '../styles/colors'
-import PillsImg from '../assets/illustrations/pills.svg'
-import { Button } from 'react-native-elements/dist/buttons/Button';
-import { Link } from '@react-navigation/native'
+import PillsImg from '../assets/illustrations/pills.png'
 
 
 
@@ -53,16 +51,15 @@ const { width } = Dimensions.get('window');
 const WelcomeStyles = StyleSheet.create({
     container: {
         width: '100%',
-        height: '92.1vh',
-        paddingTop: 100,
+        height: '100%',
         backgroundColor: "#152028"
     },
     welcomeTextContainer: {
         borderTopEndRadius: 20,
         borderTopStartRadius: 20,
         paddingVertical: 35,
-        width: '100%',
-        height: '86vh',
+        width,
+        height: '100%',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -86,18 +83,20 @@ const WelcomeStyles = StyleSheet.create({
         color: "#fff",
         textAlign: 'center',
         marginTop: 80,
-        width
+        width,
+        paddingHorizontal: 10
     },
     skipButton: {
         color: "#fff",
         textAlign: "left",
-        marginTop: "6rem",
-        marginLeft: "15rem",
         backgroundColor: "#152028",
         paddingVertical: 5,
         paddingHorizontal: 15,
         borderRadius: 20,
-        fontSize: 15
+        fontSize: 15,
+        position: 'absolute',
+        right: 15,
+        bottom: 20
     }
 
 })

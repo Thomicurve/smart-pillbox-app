@@ -1,48 +1,72 @@
-import React, { useState } from 'react';
-import {Text} from 'react-native'
-// import { NavigationContainer } from '@react-navigation/native'
-// import { createStackNavigator } from '@react-navigation/stack'
-
-// import TokenContext from './context/TokenContext';
+import React, { useEffect, useState } from 'react';
+import { NavigationContainer } from '@react-navigation/native'
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import TokenContext from './context/TokenContext';
+import useAuthUser from './hooks/useAuthUser';
 
 import NavbarWelcome from './components/NavbarWelcome'
 import NavbarLogged from './components/NavbarlLogged'
 import Register from './screens/Register';
-import Welcome from './screens/Welcome'
+import Welcome from './screens/Welcome';
+import Login from './screens/Login'
+import Home from './screens/Home'
 
-// const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 const noLoggedNavOptions = {
-  headerTitle: props => <NavbarWelcome {...props} />, headerStyle: { backgroundColor: '#152028', borderBottomWidth: 0 }
+  headerTitle: props => <NavbarWelcome {...props} />, headerBackVisible: false,
+  headerStyle: { backgroundColor: '#152028', shadowOpacity: 0, borderBottomWidth: 0, paddingHorizontal: 0 }
 }
 
 const loggedNavOptions = {
-  headerTitle: props => <NavbarLogged {...props} />, headerStyle: { backgroundColor: '#064372', borderBottomWidth: 0 }
+  headerTitle: props => <NavbarLogged {...props} />, headerBackVisible: false, headerStyle: { backgroundColor: '#064372', borderBottomWidth: 0 }
 }
 
 export default function App() {
 
-  // const [token, setToken] = useState('')
+
+  const { getToken, setToken, token } = useAuthUser();
+
+  useEffect(() => {
+    async function handleToken() {
+      const result = await getToken();
+      setToken(result);
+    }
+
+    handleToken()
+  }, [])
 
   return (
-    // <TokenContext.Provider value={token}>
-    // <Register/>
-    <Text>Hola mundo!</Text>
-      // <NavigationContainer>
-      //   <Stack.Navigator>
-      //     <Stack.Screen
-      //       name="Welcome"
-      //       component={Welcome}
-      //       options={noLoggedNavOptions}
-      //     />
-      //     <Stack.Screen
-      //       name="Register"
-      //       component={Register}
-      //       options={noLoggedNavOptions}
-      //     />
-      //   </Stack.Navigator>
-      // </NavigationContainer>
-    // </TokenContext.Provider>
+    <TokenContext.Provider value={token}>
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName={token.length ? 'Home' : 'Welcome'}>
+          {
+            !token.length &&
+              <Stack.Screen
+                name="Welcome"
+                component={Welcome}
+                options={noLoggedNavOptions}
+              />
+          }
+
+          <Stack.Screen
+            name="Home"
+            component={Home}
+            options={noLoggedNavOptions}
+          />
+          <Stack.Screen
+            name="Register"
+            component={Register}
+            options={noLoggedNavOptions}
+          />
+          <Stack.Screen
+            name="Login"
+            component={Login}
+            options={noLoggedNavOptions}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </TokenContext.Provider>
   );
 }
 
