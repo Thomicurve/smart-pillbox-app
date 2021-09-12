@@ -24,4 +24,12 @@ const login = async (dni, token) => {
     }
 }
 
-export {register, login};
+const logout = async () => {
+    try {
+        await axios.get(`${apiLink}/logout`);
+    }catch(err) {
+        return err
+    }
+}
+
+export {register, login, logout};

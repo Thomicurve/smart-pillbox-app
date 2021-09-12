@@ -10,17 +10,20 @@ import { GetPills } from '../services/PillsServices'
 
 export default function Home({ navigation }) {
     const { deleteToken } = useAuthUser();
-    const {getToken} = useAuthUser();
+    const {token, setToken} = useContext(TokenContext);
     const [pills, setPills] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
 
     useEffect(() => {
         async function callPills() {
-            const token = await getToken();
-            const result = await GetPills(token);
-
-            if (!result) throw console.log(new Error(result));
-            else setPills(result);
+            try {
+                const result = await GetPills(token);
+                setPills(result);
+                setIsLoading(false);
+            } catch (err) {
+                throw console.log(new Error(result));
+            }
         }
         callPills();
     }, [])
@@ -28,6 +31,7 @@ export default function Home({ navigation }) {
     const handleLogout = async () => {
         await deleteToken();
         setTimeout(() => {
+            setToken('');
             navigation.navigate('Login');
         }, 1500)
     }
@@ -36,18 +40,22 @@ export default function Home({ navigation }) {
     return (
         <View style={globals.container}>
             <Text>Registro de pastillas</Text>
-            {!pills.length ?
+            {isLoading ?
                 <View>
                     <Text>Cargando...</Text>
                 </View>
                 :
                 <View>
-                    {pills.map((item) => (
-                        <Text key={item._id}>{item.pillName}</Text>
-                    ))}
+                    {pills.length > 0
+                        ?
+                        pills.map((item) => (
+                            <Text key={item._id}>{item.pillName}</Text>
+                        ))
+                        :
+                        <Text>Ninguna pastilla aun</Text>
+                    }
                 </View>
             }
-
             <Button
                 title="Logout"
                 onPress={handleLogout} />
