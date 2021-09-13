@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/FontAwesome'
 
 const IconContainerStyles = {
-    borderRadius: '50%',
+    borderRadius: 50,
     width: 40,
     height: 40,
     display: 'flex',
@@ -20,8 +20,8 @@ const navGradients = {
 export default function Navbar() {
     return (
         
-        <View style={styles.container}> {/* NAV CONTAINER */}
-            <View> {/* Bars button NAV */}
+        <View style={styles.container}>
+            <View>
                 <LinearGradient colors={[navGradients.first, navGradients.second]} end={{ x: 1, y: 0 }} style={IconContainerStyles}>
                     <Icon
                         onPress={() => alert('This is a button!')}
@@ -31,12 +31,12 @@ export default function Navbar() {
                     />
                 </LinearGradient>
             </View>
-            <View> {/* TITLE NAV */}
+            <View>
                 <LinearGradient colors={[navGradients.first, navGradients.second]} end={{ x: 1, y: 0 }} style={styles.titleContainer}>
                     <Text style={styles.title}>Smart Pillbox</Text>
                 </LinearGradient>
             </View>
-            <View> {/* PHONE BUTTON NAV */}
+            <View> 
                 <LinearGradient colors={[navGradients.first, navGradients.second]} end={{ x: 1, y: 0 }} style={IconContainerStyles}>
                     <Icon
                         onPress={() => alert('This is a button!')}
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         flexDirection: 'row',
         width: '100%',
-        marginLeft: -70
+        paddingRight: 25
     },
     titleContainer: {
         paddingVertical: 5,
