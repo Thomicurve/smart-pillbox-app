@@ -2,7 +2,7 @@ import axios from 'axios'
 
 const apiLink = 'https://smart-pillbox-api.herokuapp.com';
 
-const GetPills = async ( token) => {
+const GetPills = async ( token ) => {
     try {
         const {data} = await axios.get(`${apiLink}/pills`, {
             headers: {

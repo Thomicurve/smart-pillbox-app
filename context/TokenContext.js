@@ -5,7 +5,7 @@ import useAuthUser from '../hooks/useAuthUser';
 const TokenContext = createContext({});
 
 export function TokenContextProvider({ children }) {
-    const { getToken, deleteToken } = useAuthUser();
+    const { getToken } = useAuthUser();
     const [token, setToken] = useState('')
 
     useEffect(() => {
