@@ -1,7 +1,7 @@
-import React, { useState, useContext, useEffect, } from 'react'
+import React, { useState, useContext, useEffect } from 'react'
 
 import TokenContext from '../context/TokenContext';
-import { View, Text, Button } from 'react-native'
+import { View, Text, Button, StyleSheet } from 'react-native'
 import globals from '../styles/globals'
 import useAuthUser from '../hooks/useAuthUser';
 import usePills from '../hooks/usePills';
@@ -17,24 +17,28 @@ export default function Home({ navigation }) {
 
     const callPills = async () => {
         const todayPillsResult = await GetTodayPills();
-        setTodayPills(todayPillsResult.pillsRemainingResult);
-        setNextPill(todayPillsResult.nextPill);
-        setIsLoading(false)
+        setTodayPills(todayPillsResult.todayPills);
+        setNextPill(todayPillsResult.nextPillComplete);
+        setIsLoading(!todayPillsResult.nextPillComplete ? true : false)
     }
 
 
     useEffect(() => {
-        setIsLoading(true)
         callPills();
     }, [pills])
 
-    const handleLogout = async () => {
+    const logoutUser = async () => {
         await deleteToken();
         setTimeout(() => {
             setToken('');
             navigation.navigate('Login');
         }, 1500)
     }
+
+    const goToCreatePill = () => {
+        navigation.navigate('New-pill')
+    }
+
 
 
     return (
@@ -46,20 +50,44 @@ export default function Home({ navigation }) {
                 </View>
                 :
                 <View>
-                    <Text style={{ textAlign: 'center', fontSize: 26, fontWeight: 'bold' }}>{nextPill}</Text>
+                    <Text style={{ textAlign: 'center', fontSize: 26, fontWeight: 'bold' }}>{nextPill.pillHour}</Text>
+                    <Text style={{ textAlign: 'center', fontSize: 24, fontWeight: 'bold', color: 'red' }}>{nextPill.pillName}</Text>
 
-                    <View style={{marginTop: 50}}>
+                    <View style={{marginTop: 50, display: 'flex', justifyContent: 'center'}}>
                         <Text style={{textAlign: 'center'}}>Pastillas restantes de hoy:</Text>
                         {todayPills.map(pill => {
-                            return <Text style={{ fontSize: 17, textAlign: 'center' }} key={pill._id}>{pill.pillHour}</Text>
+                            return (
+                                <View key={pill._id} style={{display: 'block', width: 250, marginLeft: 80, marginVertical: 5, borderWidth: 1.5, borderColor: 'red'}}>
+                                    <Text style={{ fontSize: 17, textAlign: 'center', color: 'red' }}>{pill.pillName}</Text>
+                                    <Text style={{ fontSize: 17, textAlign: 'center' }}>{pill.pillHour}</Text>
+                                    <Text style={{textAlign: 'center'}}>0 / {pill.amount}</Text>
+                                </View>
+                            )
                         })}
                     </View>
                 </View>
             }
 
+            <View style={styles.buttons}>
+            <Button 
+                title="New pill"
+                onPress={goToCreatePill}
+            />
+            </View>
+
+            <View style={styles.buttons}>
             <Button
                 title="Logout"
-                onPress={handleLogout} />
+                onPress={logoutUser} />
+            </View>
         </View>
     )
 }
+
+const styles = StyleSheet.create({
+    buttons: {
+        marginVertical: 5,
+        width: 250,
+        marginHorizontal: 80
+    }
+})

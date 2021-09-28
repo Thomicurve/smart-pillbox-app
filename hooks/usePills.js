@@ -10,6 +10,7 @@ const usePills = () => {
     const [thisDay] = useState(moment().format('dddd'));
     const [thisHour] = useState(moment().format('LT'));
     const [pills, setPills] = useState([]);
+    const [records, setRecords] = useState([]);
 
     const days = {
         Monday: '1',
@@ -21,22 +22,30 @@ const usePills = () => {
         Sunday: '7'
     }
 
-    const GetPills = async () => {
+    const headerOptions = () => {
+        return {
+            headers: {
+                "x-access-token": token
+            }
+        }
+    } 
+
+
+    const GetPillsAndRecords = async () => {
         if(!token) return false;
         try {
-            const { data } = await axios.get(`${apiLink}/pills`, {
-                headers: {
-                    "x-access-token": token
-                }
-            });
-            setPills(data.pills);
+            const pillsResult = await axios.get(`${apiLink}/pills`, headerOptions());
+            const recordsResult = await axios.get(`${apiLink}/todayrecords`, headerOptions());
+            setPills(pillsResult.data.pills);
+            setRecords(recordsResult.data.records);
         } catch (err) {
             return err
         }
     }
 
+
     useEffect(() => {
-        GetPills()
+        GetPillsAndRecords()
     }, [token])
 
 
@@ -50,39 +59,41 @@ const usePills = () => {
         else return null
     }
 
-    const GetTodayPills = async () => {
+    const GetTodayPills = () => {
+        // FILTROS PARA OBTENER PASTILLA DEL DIA DE HOY
+
+        // 1ER FILTRO: PASTILLAS DE HOY
         const todayPills = pills.filter(pill => pill.repeat.toString().split('').includes(days[thisDay]));
 
+        // 2DO FILTRO: SEPARAR AM Y PM
         let pillsRemainingResult = todayPills.map(pill => {
             if (pill.pillHour.includes('AM') && thisHour.includes('AM')) {
+                // 3ER FILTRO: CONOCER SI LA HORA DE LA PASTILLA SE PASÓ O AÚN FALTA
                 return getHour(pill);
             } else {
                 return getHour(pill);
             }
         })
-        
+
+        // 4TO FILTRO: FILTRAR LAS PASTILLAS QUE NO SON NULAS
         pillsRemainingResult = pillsRemainingResult.filter(pill => pill !== null);
 
-        let nextPill = '';
-        for(let i = 0; i < pillsRemainingResult.length; i++) {
-            if(pillsRemainingResult[i + 1]){
-                if(moment(pillsRemainingResult[i].pillHour, 'LT').format('X') < moment(pillsRemainingResult[i + 1].pillHour, 'LT').format('X')) {
-                    nextPill = pillsRemainingResult[i].pillHour;
-                } else {
-                    nextPill = pillsRemainingResult[i + 1].pillHour;
-                }
-            }
-        }
+        // 5TO FILTRO: ORDENAR LAS PASTILLAS QUE SIGUEN DE LA MAS CERCANA AL HORARIO ACTUAL A LA MAS LEJANA
+        let nextPill = [];
+        pillsRemainingResult.forEach(({ pillHour }) => nextPill.push(pillHour));
+        nextPill = nextPill.sort().shift();
 
-        return {pillsRemainingResult, nextPill};
+        let nextPillComplete = pillsRemainingResult.filter(({pillHour}) => pillHour.includes(nextPill));
+        nextPillComplete = nextPillComplete[0];
+
+        return { pillsRemainingResult, nextPillComplete, todayPills };
 
     }
 
 
-
     return {
         GetTodayPills,
-        GetPills,
+        GetPillsAndRecords,
         pills
     };
 
