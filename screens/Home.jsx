@@ -19,7 +19,7 @@ export default function Home({ navigation }) {
         const todayPillsResult = await GetTodayPills();
         setTodayPills(todayPillsResult.todayPills);
         setNextPill(todayPillsResult.nextPillComplete);
-        setIsLoading(!todayPillsResult.nextPillComplete ? true : false)
+        setIsLoading(false)
     }
 
 
@@ -43,42 +43,56 @@ export default function Home({ navigation }) {
 
     return (
         <View style={globals.container}>
-            <Text style={{fontSize: 32, textAlign:'center'}}>Próxima pastilla</Text>
+            <Text style={{ fontSize: 32, textAlign: 'center' }}>Próxima pastilla</Text>
             {isLoading ?
                 <View>
                     <Text>Cargando...</Text>
                 </View>
                 :
                 <View>
-                    <Text style={{ textAlign: 'center', fontSize: 26, fontWeight: 'bold' }}>{nextPill.pillHour}</Text>
-                    <Text style={{ textAlign: 'center', fontSize: 24, fontWeight: 'bold', color: 'red' }}>{nextPill.pillName}</Text>
+                    {nextPill
+                        ? <View>
+                            <Text style={{ textAlign: 'center', fontSize: 26, fontWeight: 'bold' }}>{nextPill.pillHour}</Text>
+                            <Text style={{ textAlign: 'center', fontSize: 24, fontWeight: 'bold', color: 'red' }}>{nextPill.pillName}</Text>
+                        </View>
+                        :
+                        <View>
+                            <Text>No hay una próxima pastilla</Text>
+                        </View>}
 
-                    <View style={{marginTop: 50, display: 'flex', justifyContent: 'center'}}>
-                        <Text style={{textAlign: 'center'}}>Pastillas restantes de hoy:</Text>
-                        {todayPills.map(pill => {
-                            return (
-                                <View key={pill._id} style={{display: 'block', width: 250, marginLeft: 80, marginVertical: 5, borderWidth: 1.5, borderColor: 'red'}}>
-                                    <Text style={{ fontSize: 17, textAlign: 'center', color: 'red' }}>{pill.pillName}</Text>
-                                    <Text style={{ fontSize: 17, textAlign: 'center' }}>{pill.pillHour}</Text>
-                                    <Text style={{textAlign: 'center'}}>0 / {pill.amount}</Text>
-                                </View>
-                            )
-                        })}
-                    </View>
+                    {todayPills.length == 0
+                        ? <View>
+                            <Text>No hay pastillas aún</Text>
+                        </View>
+                        :
+
+                        <View style={{ marginTop: 50, display: 'flex', justifyContent: 'center' }}>
+                            <Text style={{ textAlign: 'center' }}>Pastillas restantes de hoy:</Text>
+                            {todayPills.map(pill => {
+                                return (
+                                    <View key={pill._id} style={{width: 250, marginLeft: 80, marginVertical: 5, borderWidth: 1.5, borderColor: 'red' }}>
+                                        <Text style={{ fontSize: 17, textAlign: 'center', color: 'red' }}>{pill.pillName}</Text>
+                                        <Text style={{ fontSize: 17, textAlign: 'center' }}>{pill.pillHour}</Text>
+                                        <Text style={{ textAlign: 'center' }}>0 / {pill.amount}</Text>
+                                    </View>
+                                )
+                            })}
+                        </View>
+                    }
                 </View>
             }
 
             <View style={styles.buttons}>
-            <Button 
-                title="New pill"
-                onPress={goToCreatePill}
-            />
+                <Button
+                    title="New pill"
+                    onPress={goToCreatePill}
+                />
             </View>
 
             <View style={styles.buttons}>
-            <Button
-                title="Logout"
-                onPress={logoutUser} />
+                <Button
+                    title="Logout"
+                    onPress={logoutUser} />
             </View>
         </View>
     )
@@ -91,3 +105,14 @@ const styles = StyleSheet.create({
         marginHorizontal: 80
     }
 })
+
+
+// {todayPills.map(pill => {
+//     return (
+//         <View key={pill._id} style={{ display: 'block', width: 250, marginLeft: 80, marginVertical: 5, borderWidth: 1.5, borderColor: 'red' }}>
+//             <Text style={{ fontSize: 17, textAlign: 'center', color: 'red' }}>{pill.pillName}</Text>
+//             <Text style={{ fontSize: 17, textAlign: 'center' }}>{pill.pillHour}</Text>
+//             <Text style={{ textAlign: 'center' }}>0 / {pill.amount}</Text>
+//         </View>
+//     )
+// })}

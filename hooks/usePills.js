@@ -35,9 +35,11 @@ const usePills = () => {
         if(!token) return false;
         try {
             const pillsResult = await axios.get(`${apiLink}/pills`, headerOptions());
-            const recordsResult = await axios.get(`${apiLink}/todayrecords`, headerOptions());
+            const recordsResult = await axios.get(`${apiLink}/records`, headerOptions());
+            const recordsFiltered = recordsResult.data.records.filter(({pillDate}) => pillDate == moment().format('L'));
             setPills(pillsResult.data.pills);
-            setRecords(recordsResult.data.records);
+            setRecords(recordsFiltered);
+
         } catch (err) {
             return err
         }
@@ -49,6 +51,9 @@ const usePills = () => {
     }, [token])
 
 
+    const getTodayRecords = () => {
+
+    }
 
     const getHour = (pill) => {
         const hour = parseInt(pill.pillHour[0] + pill.pillHour[1]) - parseInt(thisHour[0] + thisHour[1]);
@@ -64,7 +69,7 @@ const usePills = () => {
 
         // 1ER FILTRO: PASTILLAS DE HOY
         const todayPills = pills.filter(pill => pill.repeat.toString().split('').includes(days[thisDay]));
-
+        
         // 2DO FILTRO: SEPARAR AM Y PM
         let pillsRemainingResult = todayPills.map(pill => {
             if (pill.pillHour.includes('AM') && thisHour.includes('AM')) {
@@ -77,12 +82,11 @@ const usePills = () => {
 
         // 4TO FILTRO: FILTRAR LAS PASTILLAS QUE NO SON NULAS
         pillsRemainingResult = pillsRemainingResult.filter(pill => pill !== null);
-
         // 5TO FILTRO: ORDENAR LAS PASTILLAS QUE SIGUEN DE LA MAS CERCANA AL HORARIO ACTUAL A LA MAS LEJANA
         let nextPill = [];
         pillsRemainingResult.forEach(({ pillHour }) => nextPill.push(pillHour));
         nextPill = nextPill.sort().shift();
-
+        
         let nextPillComplete = pillsRemainingResult.filter(({pillHour}) => pillHour.includes(nextPill));
         nextPillComplete = nextPillComplete[0];
 

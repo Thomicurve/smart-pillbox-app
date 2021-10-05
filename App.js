@@ -10,6 +10,7 @@ import Register from './screens/Register';
 import Welcome from './screens/Welcome';
 import Login from './screens/Login'
 import Home from './screens/Home'
+import { Text } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 
@@ -34,6 +35,7 @@ export default function App() {
 
     handleToken()
 }, [])
+
 
   return (
     <TokenContextProvider>
