@@ -28,15 +28,15 @@ const usePills = () => {
                 "x-access-token": token
             }
         }
-    } 
+    }
 
 
     const GetPillsAndRecords = async () => {
-        if(!token) return false;
+        if (!token) return false;
         try {
             const pillsResult = await axios.get(`${apiLink}/pills`, headerOptions());
             const recordsResult = await axios.get(`${apiLink}/records`, headerOptions());
-            const recordsFiltered = recordsResult.data.records.filter(({pillDate}) => pillDate == moment().format('L'));
+            const recordsFiltered = recordsResult.data.records.filter(({ pillDate }) => pillDate == moment().format('L'));
             setPills(pillsResult.data.pills);
             setRecords(recordsFiltered);
 
@@ -51,7 +51,21 @@ const usePills = () => {
     }, [token])
 
 
-    const getTodayRecords = () => {
+    const getTodayRecords = (todayPills) => {
+        let recordsRepeated = {};
+
+        for (let pill in todayPills) {
+            for (let record in records) {
+                if (todayPills[pill]._id == records[record].pillID) {
+                    const pillID = records[record].pillID;
+                    recordsRepeated[pillID] = {
+                        amount: !recordsRepeated[pillID] ? 1 : recordsRepeated[pillID].amount + 1
+                    }
+                }
+            }
+        }
+
+        return recordsRepeated;
 
     }
 
@@ -69,7 +83,13 @@ const usePills = () => {
 
         // 1ER FILTRO: PASTILLAS DE HOY
         const todayPills = pills.filter(pill => pill.repeat.toString().split('').includes(days[thisDay]));
-        
+
+        // OBTENER LOS REGISTROS ASOCIADOS A ESA PASTILLA
+        const recordsRepeated = getTodayRecords(todayPills);
+        todayPills.forEach(({ _id }, index) => {
+            todayPills[index] = { ...todayPills[index], takenToday: !recordsRepeated[_id] ? 0 : recordsRepeated[_id].amount };
+        });
+
         // 2DO FILTRO: SEPARAR AM Y PM
         let pillsRemainingResult = todayPills.map(pill => {
             if (pill.pillHour.includes('AM') && thisHour.includes('AM')) {
@@ -86,12 +106,13 @@ const usePills = () => {
         let nextPill = [];
         pillsRemainingResult.forEach(({ pillHour }) => nextPill.push(pillHour));
         nextPill = nextPill.sort().shift();
-        
-        let nextPillComplete = pillsRemainingResult.filter(({pillHour}) => pillHour.includes(nextPill));
+
+        //Obtener todos los datos de la pastilla filtrada
+        let nextPillComplete = pillsRemainingResult.filter(({ pillHour }) => pillHour.includes(nextPill));
         nextPillComplete = nextPillComplete[0];
 
-        return { pillsRemainingResult, nextPillComplete, todayPills };
 
+        return { pillsRemainingResult, nextPillComplete, todayPills };
     }
 
 

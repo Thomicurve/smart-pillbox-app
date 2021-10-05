@@ -10,6 +10,8 @@ import usePills from '../hooks/usePills';
 export default function Home({ navigation }) {
     const { deleteToken } = useAuthUser();
     const { setToken } = useContext(TokenContext);
+
+    const [reload, setReload] = useState(false);
     const [todayPills, setTodayPills] = useState([]);
     const [nextPill, setNextPill] = useState('');
     const [isLoading, setIsLoading] = useState(true);
@@ -25,7 +27,7 @@ export default function Home({ navigation }) {
 
     useEffect(() => {
         callPills();
-    }, [pills])
+    }, [pills, reload])
 
     const logoutUser = async () => {
         await deleteToken();
@@ -37,6 +39,10 @@ export default function Home({ navigation }) {
 
     const goToCreatePill = () => {
         navigation.navigate('New-pill')
+    }
+
+    const handleReload = () => {
+        setReload(!reload);
     }
 
 
@@ -73,7 +79,7 @@ export default function Home({ navigation }) {
                                     <View key={pill._id} style={{width: 250, marginLeft: 80, marginVertical: 5, borderWidth: 1.5, borderColor: 'red' }}>
                                         <Text style={{ fontSize: 17, textAlign: 'center', color: 'red' }}>{pill.pillName}</Text>
                                         <Text style={{ fontSize: 17, textAlign: 'center' }}>{pill.pillHour}</Text>
-                                        <Text style={{ textAlign: 'center' }}>0 / {pill.amount}</Text>
+                                        <Text style={{ textAlign: 'center' }}>{pill.takenToday} / {pill.amount}</Text>
                                     </View>
                                 )
                             })}
@@ -81,6 +87,12 @@ export default function Home({ navigation }) {
                     }
                 </View>
             }
+            <View style={styles.buttons}>
+                <Button
+                    title="Reload"
+                    onPress={handleReload}
+                />
+            </View>
 
             <View style={styles.buttons}>
                 <Button
