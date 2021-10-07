@@ -18,6 +18,24 @@ const GetPills = async ( token ) => {
     }
 }
 
+const UploadPills = async (token, dataObj) => {
+    try {
+        const {data} = await axios({
+            method: 'POST',
+            url: `${apiLink}/new-pill`,
+            headers: {
+                "x-access-token": token
+            },
+            data: dataObj
+        });
+
+        return data;
+
+    } catch(err) {{
+        return alert(err)
+    }}
+}
+
 const GetRecords = async ( token ) => {
     try {
         const {data} = await axios.get(`${apiLink}/records`, headerOptions(token));
@@ -27,4 +45,4 @@ const GetRecords = async ( token ) => {
     }
 }
 
-export {GetPills, GetRecords};
+export {GetPills, GetRecords, UploadPills};

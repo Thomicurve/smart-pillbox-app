@@ -10,7 +10,7 @@ import Register from './screens/Register';
 import Welcome from './screens/Welcome';
 import Login from './screens/Login'
 import Home from './screens/Home'
-import { Text } from 'react-native';
+import NewPill from './screens/NewPill';
 
 const Stack = createNativeStackNavigator();
 
@@ -25,48 +25,54 @@ const loggedNavOptions = {
 
 export default function App() {
   const [haveToken, setHaveToken] = useState(false);
-  const {getToken} = useAuthUser();
+  const { getToken } = useAuthUser();
 
   useEffect(() => {
     async function handleToken() {
-        const result = await getToken();
-        setHaveToken(!result ? false : true);
+      const result = await getToken();
+      setHaveToken(!result ? false : true);
     }
 
     handleToken()
-}, [])
+  }, [])
 
 
   return (
     <TokenContextProvider>
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName={haveToken ? 'Home' : 'Welcome'}>
-          {
-            !haveToken &&
+        <NavigationContainer>
+          <Stack.Navigator initialRouteName={haveToken ? 'Home' : 'Welcome'}>
+            {
+              !haveToken &&
               <Stack.Screen
                 name="Welcome"
                 component={Welcome}
                 options={noLoggedNavOptions}
               />
-          }
+            }
 
-          <Stack.Screen
-            name="Home"
-            component={Home}
-            options={loggedNavOptions}
-          />
-          <Stack.Screen
-            name="Register"
-            component={Register}
-            options={noLoggedNavOptions}
-          />
-          <Stack.Screen
-            name="Login"
-            component={Login}
-            options={noLoggedNavOptions}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
+            <Stack.Screen
+              name="Home"
+              component={Home}
+              options={loggedNavOptions}
+            />
+            <Stack.Screen
+              name="NewPill"
+              component={NewPill}
+              options={loggedNavOptions}
+            />
+
+            <Stack.Screen
+              name="Register"
+              component={Register}
+              options={noLoggedNavOptions}
+            />
+            <Stack.Screen
+              name="Login"
+              component={Login}
+              options={noLoggedNavOptions}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
     </TokenContextProvider>
   );
 }
