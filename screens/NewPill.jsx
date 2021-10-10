@@ -44,8 +44,8 @@ export default function NewPill({ navigation: { navigate } }) {
     const [hour, setHour] = useState('10:00 PM');
     const [activateTimePicker, setActivateTimePicker] = useState(false);
     const [dateSelected, setDateSelected] = useState(new Date());
-    const [pillDays, setPillDays] = useState([]);
 
+    const [pillDays, setPillDays] = useState([]);
     const [pillName, setPillName] = useState('');
     const [amount, setAmount] = useState(0);
 
@@ -75,8 +75,25 @@ export default function NewPill({ navigation: { navigate } }) {
     }
 
     const uploadPill = async () => {
-        console.log(amount.current)
+        console.log(hour.length);
+        const dataObj = {
+            pillName,
+            repeat: parseInt(pillDays.join('')),
+            pillHour: hour.length == 7 ? '0'.concat(hour) : hour,
+            amount
+        };
+        const result = await UploadPills(token, dataObj);
+        if(result.message !== 'Pastilla cargada con éxito') {
+            return ToastAndroid.show(`${result.message}`, ToastAndroid.SHORT, ToastAndroid.TOP);
+        } else {
+            ToastAndroid.show(`${result.message}`, ToastAndroid.SHORT, ToastAndroid.TOP);
+            setTimeout(() => {
+                navigate('Home');
+            }, 2500)
+        }
     }
+
+    const navigateToHome = () => navigate('Home');
 
     return (
         <View>
@@ -141,7 +158,7 @@ export default function NewPill({ navigation: { navigate } }) {
                     </View>
                 </View>
                 <View style={{width: 400, display:'flex', justifyContent:'space-evenly', flexDirection: 'row', marginTop: 20}}>
-                    <Button title="Cancelar" />
+                    <Button title="Cancelar" onPress={navigateToHome}/>
                     <Button title="Cargar pastilla ✔" onPress={uploadPill}/>
                 </View>
             </View>

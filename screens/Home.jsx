@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react'
+import React, { useState, useContext, useEffect, useLayoutEffect } from 'react'
 
 import TokenContext from '../context/TokenContext';
 import { View, Text, Button, StyleSheet, ScrollView } from 'react-native'
@@ -17,15 +17,20 @@ export default function Home({ navigation }) {
     const [isLoading, setIsLoading] = useState(true);
     const { GetTodayPills, pills } = usePills();
 
-    const callPills = async () => {
-        const todayPillsResult = await GetTodayPills();
+    const callPills = () => {
+        const todayPillsResult = GetTodayPills(reload);
         setTodayPills(todayPillsResult.todayPills);
         setNextPill(todayPillsResult.nextPillComplete);
-        setIsLoading(false)
+        setIsLoading(false);
     }
 
+    useEffect(() => {
+        callPills();
+        setTimeout(() => handleReload(), 2000);
+    }, [])
 
     useEffect(() => {
+        setIsLoading(true);
         callPills();
     }, [pills, reload])
 

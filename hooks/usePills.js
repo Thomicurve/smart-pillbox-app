@@ -1,16 +1,19 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useLayoutEffect, useRef } from "react";
 import TokenContext from '../context/TokenContext';
 import moment from "moment";
 import axios from 'axios'
 
 const apiLink = 'https://smart-pillbox-api.herokuapp.com';
 
+
+
 const usePills = () => {
     const { token } = useContext(TokenContext);
     const [thisDay] = useState(moment().format('dddd'));
     const [thisHour] = useState(moment().format('LT'));
-    const [pills, setPills] = useState([]);
-    const [records, setRecords] = useState([]);
+    const [reload, setReload] = useState(false);
+
+    const [pillsAndRecords, setPillsAndRecords] = useState({pills: [], records: []});
 
     const days = {
         Monday: '1',
@@ -37,34 +40,33 @@ const usePills = () => {
             const pillsResult = await axios.get(`${apiLink}/pills`, headerOptions());
             const recordsResult = await axios.get(`${apiLink}/records`, headerOptions());
             const recordsFiltered = recordsResult.data.records.filter(({ pillDate }) => pillDate == moment().format('L'));
-            setPills(pillsResult.data.pills);
-            setRecords(recordsFiltered);
-
+            setPillsAndRecords({pills: pillsResult.data.pills, records: recordsFiltered});
+            
         } catch (err) {
             return err
         }
     }
 
-
     useEffect(() => {
         GetPillsAndRecords()
-    }, [token])
+        GetTodayPills(reload);
+    }, [token, reload])
 
 
     const getTodayRecords = (todayPills) => {
         let recordsRepeated = {};
 
         for (let pill in todayPills) {
-            for (let record in records) {
-                if (todayPills[pill]._id == records[record].pillID) {
-                    const pillID = records[record].pillID;
+            for (let record in pillsAndRecords.records) {
+                // VER SI COINCIDE EL ID DE LAS PASTILLAS DE HOY CON ALGUN REGISTRO DE HOY
+                if (todayPills[pill]._id == pillsAndRecords.records[record].pillID) {
+                    const pillID = pillsAndRecords.records[record].pillID;
                     recordsRepeated[pillID] = {
                         amount: !recordsRepeated[pillID] ? 1 : recordsRepeated[pillID].amount + 1
                     }
                 }
             }
         }
-
         return recordsRepeated;
 
     }
@@ -78,11 +80,14 @@ const usePills = () => {
         else return null
     }
 
-    const GetTodayPills = () => {
-        // FILTROS PARA OBTENER PASTILLA DEL DIA DE HOY
 
+
+    const GetTodayPills = (reloadFromHome) => {        
+        if(pillsAndRecords.records.length == 0 && pillsAndRecords.pills.length == 0) setReload(!reload);
+        // FILTROS PARA OBTENER PASTILLA DEL DIA DE HOY
+        setReload(reloadFromHome);
         // 1ER FILTRO: PASTILLAS DE HOY
-        const todayPills = pills.filter(pill => pill.repeat.toString().split('').includes(days[thisDay]));
+        const todayPills = pillsAndRecords.pills.filter(pill => pill.repeat.toString().split('').includes(days[thisDay]));
 
         // OBTENER LOS REGISTROS ASOCIADOS A ESA PASTILLA
         const recordsRepeated = getTodayRecords(todayPills);
@@ -119,9 +124,10 @@ const usePills = () => {
     return {
         GetTodayPills,
         GetPillsAndRecords,
-        pills
+        pills: pillsAndRecords.pills,
     };
 
 }
+
 
 export default usePills;
