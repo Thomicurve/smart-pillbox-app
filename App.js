@@ -16,7 +16,7 @@ const Stack = createNativeStackNavigator();
 
 const noLoggedNavOptions = {
   headerTitle: props => <NavbarWelcome {...props} />, headerBackVisible: false,
-  headerStyle: { backgroundColor: '#152028', shadowOpacity: 0, borderBottomWidth: 0, paddingHorizontal: 0 }
+  headerStyle: { backgroundColor: '#064272', shadowOpacity: 0, borderBottomWidth: 0, paddingHorizontal: 0 }
 }
 
 const loggedNavOptions = {

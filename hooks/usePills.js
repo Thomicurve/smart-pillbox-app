@@ -73,11 +73,17 @@ const usePills = () => {
 
     const getHour = (pill) => {
         const hour = parseInt(pill.pillHour[0] + pill.pillHour[1]) - parseInt(thisHour[0] + thisHour[1]);
-        const minutes = parseInt(pill.pillHour[3] + pill.pillHour[4]) - parseInt(thisHour[2] + thisHour[3]);
-
+        let minutes;
+        if(thisHour.length == 8) {
+            minutes = parseInt(pill.pillHour[3] + pill.pillHour[4]) - parseInt(thisHour[3] + thisHour[4])
+        }else {
+            minutes = parseInt(pill.pillHour[3] + pill.pillHour[4]) - parseInt(thisHour[2] + thisHour[3]);
+        }
+        
         if (hour == 0 && minutes >= 0) return pill;
         else if (hour > 0) return pill;
-        else return null
+        else if (thisHour.includes('AM') && hour < 0) return pill;
+        else return null;
     }
 
 
@@ -97,10 +103,12 @@ const usePills = () => {
 
         // 2DO FILTRO: SEPARAR AM Y PM
         let pillsRemainingResult = todayPills.map(pill => {
+            
             if (pill.pillHour.includes('AM') && thisHour.includes('AM')) {
                 // 3ER FILTRO: CONOCER SI LA HORA DE LA PASTILLA SE PASÓ O AÚN FALTA
                 return getHour(pill);
-            } else {
+            } else if(pill.pillHour.includes('PM')){
+                // console.log('YES')
                 return getHour(pill);
             }
         })
@@ -111,11 +119,10 @@ const usePills = () => {
         let nextPill = [];
         pillsRemainingResult.forEach(({ pillHour }) => nextPill.push(pillHour));
         nextPill = nextPill.sort().shift();
-
+        
         //Obtener todos los datos de la pastilla filtrada
         let nextPillComplete = pillsRemainingResult.filter(({ pillHour }) => pillHour.includes(nextPill));
         nextPillComplete = nextPillComplete[0];
-
 
         return { pillsRemainingResult, nextPillComplete, todayPills };
     }

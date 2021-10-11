@@ -1,5 +1,5 @@
 import React, {useState} from 'react'
-import { View, Text, Button, StyleSheet, TextInput, ToastAndroid } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ToastAndroid } from 'react-native'
 import { register } from '../services/AuthServices'
 
 export default function Home({ navigation }) {
@@ -22,47 +22,76 @@ export default function Home({ navigation }) {
 
     return (
         <View style={RegisterStyles.container}>
-            <Text>Registro</Text>
+            <Text style={RegisterStyles.registerTitle}>Registrarse</Text>
             <TextInput
                 placeholder="DNI"
                 keyboardType='numeric'
                 onChangeText={num => setDni(num)}
                 style={RegisterStyles.inputFields}
+                placeholderTextColor={'#fff'}
                 />
             <TextInput
                 iconName='person'
                 iconType='MaterialIcons'
                 style={RegisterStyles.inputFields}
-                placeholder='Nombre'
+                placeholder='NOMBRE'
+                placeholderTextColor={'#fff'}
                 onChangeText={text => setName(text)}
             />
-            <Button
-                title="Registrarse"
-                onPress={handleSubmit} />
-            <Text style={RegisterStyles.linkToLogin}>Tienes una cuenta? <Text onPress={() => navigation.navigate('Login')}>Inicia sesión</Text></Text>
+            <TouchableOpacity style={RegisterStyles.buttonContainer} onPress={handleSubmit}>
+                <Text style={RegisterStyles.buttonText}>Enviar</Text>
+            </TouchableOpacity>
+            <Text style={RegisterStyles.linkToLogin}>Tienes una cuenta? <Text style={{color: '#F1982E'}} onPress={() => navigation.navigate('Login')}>Inicia sesión</Text></Text>
         </View>
     )
 }
 
 const RegisterStyles = StyleSheet.create({
     container: {
-        backgroundColor: '#141416',
+        backgroundColor: '#072F4E',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         height: '100%',
-        
+        paddingTop: 100
+    },
+    registerTitle: {
+        fontSize: 34,
+        color: '#fff',
+        fontWeight: 'bold',
+        marginBottom: 40
     },
     inputFields: {
-        backgroundColor: '#fff',
+        backgroundColor: '#072F4E',
         paddingVertical: 10,
         paddingHorizontal: 30,
-        color: '#111',
+        color: '#fff',
         marginVertical: 10,
-        borderRadius: 5
+        borderRadius: 5,
+        borderColor: '#fff',
+        borderWidth: 2,
+        width: 240,
+        fontSize: 15,
+        fontWeight: 'bold'
     },
     linkToLogin: {
         color: '#fff',
+        marginTop: 20,
+        fontSize: 16
+    },
+    buttonContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 7,
+        paddingHorizontal: 15,
+        borderRadius: 4,
+        elevation: 3,
+        backgroundColor: '#3378AD',
         marginTop: 10
-    }
+    },
+    buttonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 18,
+    },
 })

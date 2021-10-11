@@ -1,5 +1,5 @@
 import React, {useState, useContext} from 'react'
-import { View, Text, Button, StyleSheet, TextInput, ToastAndroid } from 'react-native'
+import { View, Text, StyleSheet, TextInput, ToastAndroid, TouchableOpacity } from 'react-native'
 import { login } from '../services/AuthServices'
 import TokenContext from '../context/TokenContext';
 import useAuthUser from '../hooks/useAuthUser';
@@ -29,39 +29,71 @@ export default function Login({ navigation: {navigate} }) {
 
     return (
         <View style={LoginStyles.container}>
-            <Text>Inicio de sesión</Text>
+            <Text style={LoginStyles.loginTitle}>Iniciar sesión</Text>
             <TextInput
-                placeholder="DNI"
+                placeholder="DNI (sin puntos)"
                 keyboardType='numeric'
                 onChangeText={num => setDni(num)}
                 style={LoginStyles.inputFields}
+                placeholderTextColor={'#fff'}
                 />
-            <Button
-                title="Iniciar sesión"
-                onPress={handleSubmit} />
-            <Text style={LoginStyles.linkToRegister}>No tienes cuenta? Regístrese <Text onPress={() => navigate('Register')}>aquí</Text></Text>
+                <TouchableOpacity style={LoginStyles.buttonContainer} onPress={handleSubmit} >
+                    <Text style={LoginStyles.buttonText}>Entrar</Text>
+                </TouchableOpacity>
+            <Text style={LoginStyles.linkToRegister}>No tienes cuenta?<Text style={LoginStyles.link} onPress={() => navigate('Register')}> Regístrese aquí</Text></Text>
         </View>
     )
 }
 
 const LoginStyles = StyleSheet.create({
     container: {
-        backgroundColor: '#141416',
+        backgroundColor: '#072F4E',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         height: '100%',
+        paddingTop: 100
     },
     inputFields: {
-        backgroundColor: '#fff',
+        backgroundColor: '#072F4E',
         paddingVertical: 10,
         paddingHorizontal: 30,
-        color: '#111',
+        color: '#fff',
         marginVertical: 10,
-        borderRadius: 5
+        borderRadius: 5,
+        borderColor: '#fff',
+        borderWidth: 2,
+        width: 240,
+        fontSize: 15,
+        fontWeight: 'bold'
     },
     linkToRegister: {
         color: '#fff',
-        marginTop: 30
+        marginTop: 30,
+        fontSize: 16
+    },
+    loginTitle: {
+        fontSize: 34,
+        color: '#fff',
+        fontWeight: 'bold',
+        marginBottom: 40
+    },
+    buttonContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 7,
+        paddingHorizontal: 15,
+        borderRadius: 4,
+        elevation: 3,
+        backgroundColor: '#3378AD',
+        marginTop: 10
+    },
+    buttonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 20,
+    },
+    link: {
+        color: '#F1982E',
     }
 })
