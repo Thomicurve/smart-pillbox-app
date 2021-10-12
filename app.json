@@ -20,6 +20,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "smartpillbox.pillboxapp",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"

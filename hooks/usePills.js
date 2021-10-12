@@ -13,7 +13,7 @@ const usePills = () => {
     const [thisHour] = useState(moment().format('LT'));
     const [reload, setReload] = useState(false);
 
-    const [pillsAndRecords, setPillsAndRecords] = useState({pills: [], records: []});
+    const [pillsAndRecords, setPillsAndRecords] = useState({ pills: [], records: [] });
 
     const days = {
         Monday: '1',
@@ -40,8 +40,8 @@ const usePills = () => {
             const pillsResult = await axios.get(`${apiLink}/pills`, headerOptions());
             const recordsResult = await axios.get(`${apiLink}/records`, headerOptions());
             const recordsFiltered = recordsResult.data.records.filter(({ pillDate }) => pillDate == moment().format('L'));
-            setPillsAndRecords({pills: pillsResult.data.pills, records: recordsFiltered});
-            
+            setPillsAndRecords({ pills: pillsResult.data.pills, records: recordsFiltered });
+            // console.log(pillsResult.data.pills)
         } catch (err) {
             return err
         }
@@ -74,57 +74,60 @@ const usePills = () => {
     const getHour = (pill) => {
         const hour = parseInt(pill.pillHour[0] + pill.pillHour[1]) - parseInt(thisHour[0] + thisHour[1]);
         let minutes;
-        if(thisHour.length == 8) {
+        if (thisHour.length == 8) {
             minutes = parseInt(pill.pillHour[3] + pill.pillHour[4]) - parseInt(thisHour[3] + thisHour[4])
-        }else {
+        } else {
             minutes = parseInt(pill.pillHour[3] + pill.pillHour[4]) - parseInt(thisHour[2] + thisHour[3]);
         }
         
         if (hour == 0 && minutes >= 0) return pill;
         else if (hour > 0) return pill;
-        else if (thisHour.includes('AM') && hour < 0) return pill;
+        else if (hour == 0 && minutes == 0) return pill;
         else return null;
     }
 
 
 
-    const GetTodayPills = (reloadFromHome) => {        
-        if(pillsAndRecords.records.length == 0 && pillsAndRecords.pills.length == 0) setReload(!reload);
-        // FILTROS PARA OBTENER PASTILLA DEL DIA DE HOY
+    const GetTodayPills = (reloadFromHome) => {
+        // if (pillsAndRecords.records.length == 0 && pillsAndRecords.pills.length == 0) setReload(!reload);
+        // // FILTROS PARA OBTENER PASTILLA DEL DIA DE HOY
         setReload(reloadFromHome);
-        // 1ER FILTRO: PASTILLAS DE HOY
+        // // 1ER FILTRO: PASTILLAS DE HOY
         const todayPills = pillsAndRecords.pills.filter(pill => pill.repeat.toString().split('').includes(days[thisDay]));
 
-        // OBTENER LOS REGISTROS ASOCIADOS A ESA PASTILLA
+        // // OBTENER LOS REGISTROS ASOCIADOS A ESA PASTILLA
         const recordsRepeated = getTodayRecords(todayPills);
         todayPills.forEach(({ _id }, index) => {
             todayPills[index] = { ...todayPills[index], takenToday: !recordsRepeated[_id] ? 0 : recordsRepeated[_id].amount };
         });
 
-        // 2DO FILTRO: SEPARAR AM Y PM
+        // // 2DO FILTRO: SEPARAR AM Y PM
         let pillsRemainingResult = todayPills.map(pill => {
-            
             if (pill.pillHour.includes('AM') && thisHour.includes('AM')) {
                 // 3ER FILTRO: CONOCER SI LA HORA DE LA PASTILLA SE PASÓ O AÚN FALTA
                 return getHour(pill);
-            } else if(pill.pillHour.includes('PM')){
-                // console.log('YES')
+            } else if (pill.pillHour.includes('PM')) {
                 return getHour(pill);
             }
         })
 
-        // 4TO FILTRO: FILTRAR LAS PASTILLAS QUE NO SON NULAS
-        pillsRemainingResult = pillsRemainingResult.filter(pill => pill !== null);
-        // 5TO FILTRO: ORDENAR LAS PASTILLAS QUE SIGUEN DE LA MAS CERCANA AL HORARIO ACTUAL A LA MAS LEJANA
+        // // 4TO FILTRO: FILTRAR LAS PASTILLAS QUE NO SON NULAS
+        pillsRemainingResult = pillsRemainingResult.filter(pill => (pill !== undefined && pill !== null));
+
+        // // 5TO FILTRO: ORDENAR LAS PASTILLAS QUE SIGUEN DE LA MAS CERCANA AL HORARIO ACTUAL A LA MAS LEJANA
         let nextPill = [];
-        pillsRemainingResult.forEach(({ pillHour }) => nextPill.push(pillHour));
-        nextPill = nextPill.sort().shift();
-        
-        //Obtener todos los datos de la pastilla filtrada
+        pillsRemainingResult.forEach(({ pillHour }) => {
+            nextPill.push(pillHour);
+        });
+        nextPill.sort().shift();
+        // //Obtener todos los datos de la pastilla filtrada
         let nextPillComplete = pillsRemainingResult.filter(({ pillHour }) => pillHour.includes(nextPill));
+        
         nextPillComplete = nextPillComplete[0];
 
         return { pillsRemainingResult, nextPillComplete, todayPills };
+
+        // return pillsRemainingResult;
     }
 
 

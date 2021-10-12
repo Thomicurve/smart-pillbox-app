@@ -1,8 +1,7 @@
 import React, { useState, useContext, useEffect, useLayoutEffect } from 'react'
 
 import TokenContext from '../context/TokenContext';
-import { View, Text, Button, StyleSheet, ScrollView } from 'react-native'
-import globals from '../styles/globals'
+import { View, Text, Button, StyleSheet, ScrollView, RefreshControlBase } from 'react-native'
 import useAuthUser from '../hooks/useAuthUser';
 import usePills from '../hooks/usePills';
 
@@ -13,15 +12,21 @@ export default function Home({ navigation }) {
 
     const [reload, setReload] = useState(false);
     const [todayPills, setTodayPills] = useState([]);
-    const [nextPill, setNextPill] = useState('');
+    const [nextPill, setNextPill] = useState({pillName: '', pillHour: ''});
     const [isLoading, setIsLoading] = useState(true);
     const { GetTodayPills, pills } = usePills();
 
-    const callPills = () => {
+
+    const callPills = async () => {
         const todayPillsResult = GetTodayPills(reload);
         setTodayPills(todayPillsResult.todayPills);
         setNextPill(todayPillsResult.nextPillComplete);
+        console.log(todayPillsResult.nextPillComplete);
         setIsLoading(false);
+    }
+
+    const handleReload = () => {
+        setReload(!reload);
     }
 
     useEffect(() => {
@@ -46,29 +51,27 @@ export default function Home({ navigation }) {
         navigation.navigate('NewPill')
     }
 
-    const handleReload = () => {
-        setReload(!reload);
-    }
+    
 
 
 
     return (
         <View style={styles.container}>
-                <Text style={styles.title}>Próxima pastilla</Text>
-                {isLoading ?
-                    <View>
-                        <Text>Cargando...</Text>
-                    </View>
-                    :
-                    <View>
-                        {nextPill
+            <Text style={styles.title}>Próxima pastilla</Text>
+            {isLoading ?
+                <View>
+                    <Text>Cargando...</Text>
+                </View>
+                :
+                <View>
+                    {nextPill !== undefined
                             ? <View style={styles.nextPillContainer}>
                                 <Text style={styles.nextPillName}>{nextPill.pillName}</Text>
                                 <Text style={styles.nextPillHour}>{nextPill.pillHour}</Text>
                             </View>
                             :
                             <View>
-                                <Text>No hay una próxima pastilla</Text>
+                                <Text style={styles.notNextPills}>No hay una próxima pastilla</Text>
                             </View>}
 
                         {todayPills.length == 0
@@ -92,27 +95,28 @@ export default function Home({ navigation }) {
                                 </View>
                             </View>
                         }
-                    </View>
-                }
-                <View style={styles.buttons}>
-                    <Button
-                        title="Reload"
-                        onPress={handleReload}
-                    />
                 </View>
+                
+            }
+            <View style={styles.buttons}>
+                <Button
+                    title="Reload"
+                    onPress={handleReload}
+                />
+            </View>
 
-                <View style={styles.buttons}>
-                    <Button
-                        title="New pill"
-                        onPress={goToCreatePill}
-                    />
-                </View>
+            <View style={styles.buttons}>
+                <Button
+                    title="New pill"
+                    onPress={goToCreatePill}
+                />
+            </View>
 
-                <View style={styles.buttons}>
-                    <Button
-                        title="Logout"
-                        onPress={logoutUser} />
-                </View>
+            <View style={styles.buttons}>
+                <Button
+                    title="Logout"
+                    onPress={logoutUser} />
+            </View>
         </View>
     )
 }
@@ -153,7 +157,15 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 18,
         textTransform: 'uppercase'
-    },  
+    },
+    notNextPills: {
+        color: '#F2D06B',
+        fontWeight: 'bold',
+        fontSize: 18,
+        textTransform: 'uppercase',
+        textAlign: 'center',
+        marginTop: 30
+    },
     buttons: {
         marginVertical: 5,
         width: 250,
