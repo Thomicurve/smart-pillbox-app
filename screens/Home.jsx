@@ -1,9 +1,10 @@
 import React, { useState, useContext, useEffect, useLayoutEffect } from 'react'
 
 import TokenContext from '../context/TokenContext';
-import { View, Text, Button, StyleSheet, ScrollView, RefreshControlBase } from 'react-native'
+import { View, Text, Button, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
 import useAuthUser from '../hooks/useAuthUser';
 import usePills from '../hooks/usePills';
+import { MaterialIcons } from '@expo/vector-icons'
 
 
 export default function Home({ navigation }) {
@@ -12,7 +13,7 @@ export default function Home({ navigation }) {
 
     const [reload, setReload] = useState(false);
     const [todayPills, setTodayPills] = useState([]);
-    const [nextPill, setNextPill] = useState({pillName: '', pillHour: ''});
+    const [nextPill, setNextPill] = useState({ pillName: '', pillHour: '' });
     const [isLoading, setIsLoading] = useState(true);
     const { GetTodayPills, pills } = usePills();
 
@@ -51,20 +52,21 @@ export default function Home({ navigation }) {
         navigation.navigate('NewPill')
     }
 
-    
+
 
 
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Próxima pastilla</Text>
-            {isLoading ?
-                <View>
-                    <Text>Cargando...</Text>
-                </View>
-                :
-                <View>
-                    {nextPill !== undefined
+        <ScrollView >
+            <View style={styles.container}>
+                <Text style={styles.title}>Próxima pastilla</Text>
+                {isLoading ?
+                    <View>
+                        <Text>Cargando...</Text>
+                    </View>
+                    :
+                    <View>
+                        {nextPill !== undefined
                             ? <View style={styles.nextPillContainer}>
                                 <Text style={styles.nextPillName}>{nextPill.pillName}</Text>
                                 <Text style={styles.nextPillHour}>{nextPill.pillHour}</Text>
@@ -80,7 +82,7 @@ export default function Home({ navigation }) {
                             </View>
                             :
 
-                            <View style={{ marginTop: 50, display: 'flex', justifyContent: 'center' }}>
+                            <View style={{ marginTop: 30, display: 'flex', justifyContent: 'center' }}>
                                 <Text style={styles.todayPillsTitle}>Pastillas de hoy:</Text>
                                 <View style={styles.todayPillsContainer}>
                                     {todayPills.map(pill => {
@@ -95,36 +97,36 @@ export default function Home({ navigation }) {
                                 </View>
                             </View>
                         }
+                    </View>
+
+                }
+                <View>
+                    <TouchableOpacity style={styles.reloadButton} onPress={handleReload}>
+                        <MaterialIcons name="autorenew"size={30} color="white"  />
+                    </TouchableOpacity>
                 </View>
-                
-            }
-            <View style={styles.buttons}>
-                <Button
-                    title="Reload"
-                    onPress={handleReload}
-                />
-            </View>
 
-            <View style={styles.buttons}>
-                <Button
-                    title="New pill"
-                    onPress={goToCreatePill}
-                />
-            </View>
+                <View style={styles.buttons}>
+                    <Button
+                        title="New pill"
+                        onPress={goToCreatePill}
+                    />
+                </View>
 
-            <View style={styles.buttons}>
-                <Button
-                    title="Logout"
-                    onPress={logoutUser} />
+                <View style={styles.buttons}>
+                    <Button
+                        title="Logout"
+                        onPress={logoutUser} />
+                </View>
             </View>
-        </View>
+        </ScrollView>
     )
 }
 
 const styles = StyleSheet.create({
     container: {
         backgroundColor: '#072F4E',
-        height: '100%'
+        height: 700
     },
     title: {
         color: '#fff',
@@ -136,7 +138,7 @@ const styles = StyleSheet.create({
     nextPillContainer: {
         backgroundColor: '#1F547E',
         width: '70%',
-        height: '30%',
+        height: '20%',
         marginLeft: 'auto',
         marginRight: 'auto',
         borderRadius: 15,
@@ -169,7 +171,8 @@ const styles = StyleSheet.create({
     buttons: {
         marginVertical: 5,
         width: 250,
-        marginHorizontal: 80
+        marginLeft: 'auto',
+        marginRight: 'auto'
     },
     todayPillsTitle: {
         color: '#fff',
@@ -195,7 +198,7 @@ const styles = StyleSheet.create({
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
     },
     pillName: {
         color: '#fff',
@@ -213,5 +216,18 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         fontWeight: 'bold',
         fontSize: 16
+    },
+    reloadButton: {
+        backgroundColor: "#1F547E",
+        width: 40,
+        height: 40,
+        borderRadius: 50,
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'absolute',
+        left: 50,
+        top: -45
     }
 })
