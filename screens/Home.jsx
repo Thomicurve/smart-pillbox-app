@@ -1,7 +1,7 @@
-import React, { useState, useContext, useEffect, useLayoutEffect } from 'react'
+import React, { useState, useContext, useEffect } from 'react'
 
 import TokenContext from '../context/TokenContext';
-import { View, Text, Button, StyleSheet, ScrollView, RefreshControlBase } from 'react-native'
+import { View, Text, Button, StyleSheet  } from 'react-native'
 import useAuthUser from '../hooks/useAuthUser';
 import usePills from '../hooks/usePills';
 
