@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react'
 
 import TokenContext from '../context/TokenContext';
-import { View, Text, Button, StyleSheet  } from 'react-native'
+
 import useAuthUser from '../hooks/useAuthUser';
 import usePills from '../hooks/usePills';
 
@@ -21,7 +21,6 @@ export default function Home({ navigation }) {
         const todayPillsResult = GetTodayPills(reload);
         setTodayPills(todayPillsResult.todayPills);
         setNextPill(todayPillsResult.nextPillComplete);
-        console.log(todayPillsResult.nextPillComplete);
         setIsLoading(false);
     }
 
