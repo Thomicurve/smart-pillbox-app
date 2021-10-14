@@ -75,7 +75,6 @@ export default function NewPill({ navigation: { navigate } }) {
     }
 
     const uploadPill = async () => {
-        console.log(hour.length);
         const dataObj = {
             pillName,
             repeat: parseInt(pillDays.join('')),

@@ -1,15 +1,11 @@
-import React, { useState, useContext, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 
-import TokenContext from '../context/TokenContext';
 import { View, Text, Button, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
-import useAuthUser from '../hooks/useAuthUser';
 import usePills from '../hooks/usePills';
-import { MaterialIcons } from '@expo/vector-icons'
+import { MaterialIcons } from '@expo/vector-icons';
 
 
 export default function Home({ navigation }) {
-    const { deleteToken } = useAuthUser();
-    const { setToken } = useContext(TokenContext);
 
     const [reload, setReload] = useState(false);
     const [todayPills, setTodayPills] = useState([]);
@@ -38,14 +34,6 @@ export default function Home({ navigation }) {
         setIsLoading(true);
         callPills();
     }, [pills, reload])
-
-    const logoutUser = async () => {
-        await deleteToken();
-        setTimeout(() => {
-            setToken('');
-            navigation.navigate('Login');
-        }, 1500)
-    }
 
     const goToCreatePill = () => {
         navigation.navigate('NewPill')
@@ -99,23 +87,13 @@ export default function Home({ navigation }) {
                     </View>
 
                 }
-                <View>
+                <View style={styles.pillsButtons}>
                     <TouchableOpacity style={styles.reloadButton} onPress={handleReload}>
-                        <MaterialIcons name="autorenew"size={30} color="white"  />
+                        <MaterialIcons name="autorenew" size={30} color="white" />
                     </TouchableOpacity>
-                </View>
-
-                <View style={styles.buttons}>
-                    <Button
-                        title="New pill"
-                        onPress={goToCreatePill}
-                    />
-                </View>
-
-                <View style={styles.buttons}>
-                    <Button
-                        title="Logout"
-                        onPress={logoutUser} />
+                    <TouchableOpacity onPress={goToCreatePill} style={styles.newPillButton}>
+                        <Text style={{color: '#fff', fontSize: 16, fontWeight: 'bold'}}>Nueva pastilla</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
         </ScrollView>
@@ -125,7 +103,7 @@ export default function Home({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         backgroundColor: '#072F4E',
-        height: 700
+        height: 800
     },
     title: {
         color: '#fff',
@@ -225,8 +203,22 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        position: 'absolute',
-        left: 50,
-        top: -45
+    },
+    pillsButtons: {
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '80%',
+        marginLeft: 'auto',
+        marginRight: 'auto',
+        marginTop: 15,
+    },
+    newPillButton: {
+        backgroundColor: "#1F547E",
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 20,
+        marginLeft: 40
     }
 })

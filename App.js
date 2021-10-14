@@ -19,9 +19,10 @@ const noLoggedNavOptions = {
   headerStyle: { backgroundColor: '#064272', shadowOpacity: 0, borderBottomWidth: 0, paddingHorizontal: 0 }
 }
 
-const loggedNavOptions = {
-  headerTitle: props => <NavbarLogged {...props} />, headerBackVisible: false, headerStyle: { backgroundColor: '#064372', borderBottomWidth: 0 }
-}
+const loggedNavOptions = ({ navigation, route }) => ({
+  headerTitle: props => <NavbarLogged {...props} navigation={navigation} route={route} />, 
+  headerBackVisible: false, headerStyle: { backgroundColor: '#064372', borderBottomWidth: 0}
+});
 
 export default function App() {
   const [haveToken, setHaveToken] = useState(false);

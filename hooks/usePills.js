@@ -72,9 +72,9 @@ const usePills = () => {
 
     const getHour = (pill) => {
         let hourChanged = pill.pillHour.split('').slice(0, 5).join('');
-        hourChanged += `:00 ${pill.pillHour[6]+ pill.pillHour[7]}`;
-        let finalHourComplete = moment(`${moment().format('L')} ${hourChanged}`);
-        
+        if(hourChanged[0] == 0) hourChanged = hourChanged.slice(1, 5);
+        hourChanged += `${pill.pillHour[6]+ pill.pillHour[7]}`;
+        let finalHourComplete = moment(hourChanged, 'h:mma');
         if(finalHourComplete.isAfter(moment()) == true)  return pill;
         else return null 
     }

@@ -1,7 +1,10 @@
-import React from 'react'
-import { View, StyleSheet, Text } from 'react-native'
+import React, {useContext} from 'react'
+import { View, StyleSheet, Text, TouchableOpacity } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/FontAwesome'
+import { MaterialIcons } from '@expo/vector-icons';
+import TokenContext from '../context/TokenContext'
+import useAuthUser from '../hooks/useAuthUser';
 
 const IconContainerStyles = {
     borderRadius: 50,
@@ -17,9 +20,20 @@ const navGradients = {
     second: '#3378AD'
 }
 
-export default function Navbar() {
+export default function Navbar({navigation}) {
+    const { deleteToken } = useAuthUser();
+    const { setToken } = useContext(TokenContext)
+
+    const logoutUser = async () => {
+        await deleteToken();
+        setTimeout(() => {
+            setToken('');
+            navigation.navigate('Login');
+        }, 1500)
+    }
+
     return (
-        
+
         <View style={styles.container}>
             <View>
                 <LinearGradient colors={[navGradients.first, navGradients.second]} end={{ x: 1, y: 0 }} style={IconContainerStyles}>
@@ -36,14 +50,11 @@ export default function Navbar() {
                     <Text style={styles.title}>Smart Pillbox</Text>
                 </LinearGradient>
             </View>
-            <View> 
+            <View>
                 <LinearGradient colors={[navGradients.first, navGradients.second]} end={{ x: 1, y: 0 }} style={IconContainerStyles}>
-                    <Icon
-                        onPress={() => alert('This is a button!')}
-                        name="phone"
-                        color="#fff"
-                        size={25}
-                    />
+                    <TouchableOpacity onPress={logoutUser}>
+                        <MaterialIcons name="exit-to-app" size={30} color="white" />
+                    </TouchableOpacity>
                 </LinearGradient>
             </View>
         </View>
@@ -58,16 +69,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         flexDirection: 'row',
         width: '100%',
-        paddingRight: 25
+        paddingRight: 25,
     },
     titleContainer: {
         paddingVertical: 5,
         paddingHorizontal: 15,
-        borderRadius: 50
+        borderRadius: 50,
     },
     title: {
         fontSize: 20,
         color: '#fff',
         fontWeight: 'bold'
-    }, 
+    },
 });
