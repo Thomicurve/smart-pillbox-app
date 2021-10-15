@@ -107,8 +107,17 @@ const usePills = () => {
         pillsRemainingResult.forEach(({ pillHour }) => {
             nextPill.push(pillHour);
         });
-        nextPill = nextPill.sort().shift();
 
+        const nextPillAM = [];
+        nextPill.forEach(pill => {
+            if(pill.includes('AM')) {
+                nextPillAM.push(pill);
+            }
+        })
+
+        if(nextPillAM.length != 0) nextPill = nextPillAM;
+        nextPill = nextPill.sort().shift();
+        
         //Obtener todos los datos de la pastilla filtrada
         let nextPillComplete = pillsRemainingResult.filter(({ pillHour }) => pillHour.includes(nextPill));
         

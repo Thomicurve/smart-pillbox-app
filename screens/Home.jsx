@@ -53,7 +53,7 @@ export default function Home({ navigation }) {
                     </View>
                     :
                     <View>
-                        {nextPill !== undefined
+                        {nextPill
                             ? <View style={styles.nextPillContainer}>
                                 <Text style={styles.nextPillName}>{nextPill.pillName}</Text>
                                 <Text style={styles.nextPillHour}>{nextPill.pillHour}</Text>
