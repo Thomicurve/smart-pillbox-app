@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { NavigationContainer } from '@react-navigation/native'
+import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { TokenContextProvider } from './context/TokenContext';
 import useAuthUser from './hooks/useAuthUser';
@@ -20,8 +20,8 @@ const noLoggedNavOptions = {
 }
 
 const loggedNavOptions = ({ navigation, route }) => ({
-  headerTitle: props => <NavbarLogged {...props} navigation={navigation} route={route} />, 
-  headerBackVisible: false, headerStyle: { backgroundColor: '#064372', borderBottomWidth: 0}
+  headerTitle: props => <NavbarLogged {...props} navigation={navigation} route={route} />,
+  headerBackVisible: false, headerStyle: { backgroundColor: '#064372', borderBottomWidth: 0 }
 });
 
 export default function App() {
@@ -36,7 +36,6 @@ export default function App() {
 
     handleToken()
   }, [])
-
 
   return (
     <TokenContextProvider>

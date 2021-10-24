@@ -212,7 +212,8 @@ const styles = StyleSheet.create({
         width: '80%',
         marginLeft: 'auto',
         marginRight: 'auto',
-        marginTop: 15,
+        position: 'relative',
+        top: -30
     },
     newPillButton: {
         backgroundColor: "#1F547E",

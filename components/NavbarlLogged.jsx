@@ -1,7 +1,6 @@
 import React, {useContext} from 'react'
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient';
-import Icon from 'react-native-vector-icons/FontAwesome'
 import { MaterialIcons } from '@expo/vector-icons';
 import TokenContext from '../context/TokenContext'
 import useAuthUser from '../hooks/useAuthUser';
@@ -35,17 +34,7 @@ export default function Navbar({navigation}) {
     return (
 
         <View style={styles.container}>
-            <View>
-                <LinearGradient colors={[navGradients.first, navGradients.second]} end={{ x: 1, y: 0 }} style={IconContainerStyles}>
-                    <Icon
-                        onPress={() => alert('This is a button!')}
-                        name="bars"
-                        color="#fff"
-                        size={25}
-                    />
-                </LinearGradient>
-            </View>
-            <View>
+            <View style={{flexBasis: 200}}>
                 <LinearGradient colors={[navGradients.first, navGradients.second]} end={{ x: 1, y: 0 }} style={styles.titleContainer}>
                     <Text style={styles.title}>Smart Pillbox</Text>
                 </LinearGradient>
@@ -79,6 +68,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 20,
         color: '#fff',
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        textAlign: 'center'
     },
 });
