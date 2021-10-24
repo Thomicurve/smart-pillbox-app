@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, useLayoutEffect, useRef } from "react";
+import { useState, useEffect, useContext } from "react";
 import TokenContext from '../context/TokenContext';
 import moment from "moment";
 import axios from 'axios'
@@ -10,7 +10,6 @@ const apiLink = 'https://smart-pillbox-api.herokuapp.com';
 const usePills = () => {
     const { token } = useContext(TokenContext);
     const [thisDay] = useState(moment().format('dddd'));
-    const [thisHour] = useState(moment().format('LT'));
     const [reload, setReload] = useState(false);
 
     const [pillsAndRecords, setPillsAndRecords] = useState({ pills: [], records: [] });

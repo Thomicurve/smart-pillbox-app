@@ -1,8 +1,8 @@
-import React, { useState, useContext, useRef } from 'react'
-import { View, Text, Button, StyleSheet, TextInput, ToastAndroid, FlatList } from 'react-native'
+import React, { useState, useContext } from 'react'
+import { View, Text, StyleSheet, TextInput, ToastAndroid, FlatList, TouchableOpacity } from 'react-native'
 import TokenContext from '../context/TokenContext';
 import DateTimePicker from '@react-native-community/datetimepicker'
-import {UploadPills} from '../services/PillsServices' 
+import { UploadPills } from '../services/PillsServices'
 import moment from 'moment';
 
 
@@ -82,7 +82,7 @@ export default function NewPill({ navigation: { navigate } }) {
             amount
         };
         const result = await UploadPills(token, dataObj);
-        if(result.message !== 'Pastilla cargada con éxito') {
+        if (result.message !== 'Pastilla cargada con éxito') {
             return ToastAndroid.show(`${result.message}`, ToastAndroid.SHORT, ToastAndroid.TOP);
         } else {
             ToastAndroid.show(`${result.message}`, ToastAndroid.SHORT, ToastAndroid.TOP);
@@ -95,47 +95,56 @@ export default function NewPill({ navigation: { navigate } }) {
     const navigateToHome = () => navigate('Home');
 
     return (
-        <View>
-            <Text>Nueva pastilla</Text>
-            <View>
+        <View style={styles.containerStyles}>
+            <Text style={styles.newPillTitle}>Nueva pastilla</Text>
+            <View style={styles.inputsContainer}>
                 <TextInput
                     placeholder="Nombre de la pastilla"
                     style={styles.inputs}
                     onChangeText={value => setPillName(value)}
+                    placeholderTextColor={'#ccc'}
+                    selectionColor={'#fff'}
                 />
-                <View style={styles.inputsContainer}>
-                    <Text>Hora</Text>
-                    <Button
-                        title={hour}
-                        onPress={handleTimePicker}
-                    />
-                    {
-                        activateTimePicker &&
-                        <DateTimePicker
-                            display="spinner"
-                            value={dateSelected}
-                            mode="time"
-                            is24Hour={false}
-                            onChange={handleHour}
-                            locale="es-ES"
+                <View style={styles.hourAndAmount}>
+                    <View>
+                        <Text style={styles.middleInputTitles}>Horario</Text>
+                        <TouchableOpacity
+                            style={styles.hourButton}
+                            onPress={handleTimePicker}>
+                                <Text style={styles.hourText}>{hour}</Text>
+                        </TouchableOpacity>
+                        {
+                            activateTimePicker &&
+                            <DateTimePicker
+                                display="spinner"
+                                value={dateSelected}
+                                mode="time"
+                                is24Hour={false}
+                                onChange={handleHour}
+                                locale="es-ES"
+                            />
+                        }
+                    </View>
+
+                    <View>
+                        <Text style={styles.middleInputTitles}>Cantidad</Text>
+                        <TextInput
+                            style={styles.amountInput}
+                            placeholderTextColor={'#ccc'}
+                            placeholder='1,2,3...'
+                            keyboardType="numeric"
+                            onChangeText={(value) => setAmount(value)}
                         />
-                    }
+                    </View>
 
                 </View>
-                <View style={styles.inputsContainer}>
-                    <Text>Cantidad</Text>
-                    <TextInput
-                        style={styles.inputs}
-                        keyboardType="numeric"
-                        onChangeText={(value) => setAmount(value)}
-                    />
-                </View>
+
 
                 <View>
-                    <Text>Dias que va a tomar la pastilla</Text>
-                    <Text>{pillDays}</Text>
+                    <Text style={styles.daysTitle}>Dias que va a tomar la pastilla</Text>
                     <View >
                         <FlatList
+                            style={styles.FlatList}
                             data={days}
                             numColumns={7}
                             renderItem={({ item }) =>
@@ -156,9 +165,14 @@ export default function NewPill({ navigation: { navigate } }) {
                         />
                     </View>
                 </View>
-                <View style={{width: 400, display:'flex', justifyContent:'space-evenly', flexDirection: 'row', marginTop: 20}}>
-                    <Button title="Cancelar" onPress={navigateToHome}/>
-                    <Button title="Cargar pastilla ✔" onPress={uploadPill}/>
+                <View style={{ width: '100%', display: 'flex', justifyContent: 'space-around', flexDirection: 'row', marginTop: 50 }}>
+                    <TouchableOpacity style={styles.actionButtons} onPress={navigateToHome}>
+                        <Text style={styles.actionTexts}>Cancelar</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.actionButtons} onPress={uploadPill}>
+                        <Text style={styles.actionTexts}>Cargar pastilla</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
         </View>
@@ -166,25 +180,105 @@ export default function NewPill({ navigation: { navigate } }) {
 }
 
 const styles = StyleSheet.create({
+    containerStyles: {
+        backgroundColor: '#072F4E',
+        height: '100%',
+    },
+    newPillTitle: {
+        color: '#fff',
+        textAlign: 'center',
+        fontWeight: 'bold',
+        fontSize: 30,
+        marginTop: 30,
+        marginBottom: 10
+    },
     inputs: {
-        borderColor: 'red',
+        borderColor: '#fff',
         borderWidth: 2,
-        width: 200,
+        color: '#fff',
+        width: '70%',
+        marginLeft: 'auto',
+        marginRight: 'auto',
         paddingVertical: 5,
-        paddingHorizontal: 10
+        paddingHorizontal: 10,
+        borderRadius: 5
     },
     inputsContainer: {
-        borderColor: 'blue',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'flex-start',
+        height: 540,
+        width: '96%',
+        marginLeft: 'auto',
+        marginRight: 'auto',
+        marginTop: 10,
+        backgroundColor: '#1F547E',
+        paddingVertical: 30,
+        borderRadius: 10
+    },
+    hourAndAmount: {
+        marginTop: 40,
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-around',
+        marginBottom: 20
+    },
+    middleInputTitles: {
+        color: '#fff',
+        fontSize: 16,
+        textAlign: 'center',
+        marginBottom: 5
+    },  
+    hourButton: {
+        backgroundColor: '#072F4E',
+        paddingVertical: 8,
+        paddingHorizontal: 15,
+        borderRadius: 5,
+    },
+    hourText: {
+        fontSize: 16,
+        color: '#fff',
+        fontWeight: 'bold',
+    },
+    amountInput: {
         borderWidth: 2,
+        borderColor: '#fff',
+        paddingVertical: 3,
+        paddingHorizontal: 15,
+        borderRadius: 5,
+        color: '#fff',
+        textAlign: 'center',
+        fontSize: 16
+    },
+    daysTitle: {
+        color: '#fff',
+        textAlign: 'center',
+        marginTop: 40,
+        fontSize: 16,
+    },
+    actionButtons: {
+        borderRadius: 5,
+        backgroundColor: '#3378AD',
         paddingHorizontal: 10,
         paddingVertical: 10,
-        marginTop: 10
+    },
+    actionTexts: {
+        color: '#fff',
+        fontWeight: 'bold'
+    },
+    FlatList: {
+        display: 'flex',
+        flexDirection: 'row',
+        flexWrap: 'wrap-reverse',
+        width: '100%',
+        marginTop: 15
     },
     daysContainer: {
         width: 45,
         display: 'flex',
-        marginHorizontal: 5,
-        borderWidth: 5,
+        marginHorizontal: 2,
+        borderWidth: 4,
         borderRadius: 15,
         overflow: 'hidden',
     },
@@ -194,5 +288,5 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: "700",
         color: '#fff',
-    }
+    },
 })
