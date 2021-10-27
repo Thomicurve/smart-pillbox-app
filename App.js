@@ -12,6 +12,8 @@ import Login from './screens/Login'
 import Home from './screens/Home'
 import NewPill from './screens/NewPill';
 
+import Example from './screens/Example';
+
 const Stack = createNativeStackNavigator();
 
 const noLoggedNavOptions = {
@@ -52,7 +54,7 @@ export default function App() {
 
             <Stack.Screen
               name="Home"
-              component={Home}
+              component={Example}
               options={loggedNavOptions}
             />
             <Stack.Screen
