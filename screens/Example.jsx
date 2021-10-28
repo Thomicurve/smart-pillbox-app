@@ -1,4 +1,4 @@
-import React, {useState, useRef} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     SafeAreaView,
     StyleSheet,
@@ -18,7 +18,7 @@ const sleep = (time) => new Promise((resolve) => setTimeout(() => resolve(), tim
 
 
 const options = {
-    taskName: 'VerifyPills',
+    taskName: 'Example',
     taskTitle: 'Corriendo...🔍',
     taskDesc: 'Analizando pastillas',
     taskIcon: {
@@ -27,42 +27,49 @@ const options = {
     },
     color: '#072F4E',
     parameters: {
-        delay: 5000,
+        delay: 1000,
     },
 };
 
 
 function Example() {
-    const [playing, setPlaying] = useState();
+    const [playing, setPlaying] = useState(BackgroundJob.isRunning());
 
     const taskRandom = async (taskData) => {
         await new Promise(async (resolve) => {
             // For loop with a delay
             const { delay } = taskData;
+            let count = 0;
             for (let i = 0; BackgroundJob.isRunning(); i++) {
-                console.log(AppState.currentState);
-                // console.log('Running');
+                if(count >= 10) {
+                    console.log('Tomar pastilla!!!');
+                } else {
+                    count++;
+                }
                 await sleep(delay);
             }
         });
     };
 
-    const toggleBackground = async () => {
-        setPlaying(!playing);
-        
-        if(playing) {
-            try {
-                console.log('Trying to start background service');
+
+    useEffect(() => {
+        async function handlePlayBackground() {
+            if (playing) {
                 await BackgroundJob.start(taskRandom, options);
                 console.log('Successful start!');
-            } catch(e) {
-                console.log('Error', e);
+            } else {
+                console.log('Stop background service');
+                await BackgroundJob.stop();
             }
-        } else {
-            console.log('Stop background service');
-            await BackgroundJob.stop();
         }
+        handlePlayBackground();
+    }, [playing])
+
+
+    const toggleBackground = () => {
+        setPlaying(!playing);
     };
+
     return (
         <>
             <StatusBar barStyle="dark-content" />
@@ -74,6 +81,9 @@ function Example() {
                     <View style={styles.body}>
                         <TouchableOpacity
                             style={{ height: 100, width: 100, backgroundColor: 'red' }}
+                            onPress={toggleBackground}></TouchableOpacity>
+                        <TouchableOpacity
+                            style={{ height: 100, width: 100, backgroundColor: 'blue' }}
                             onPress={toggleBackground}></TouchableOpacity>
                     </View>
                 </ScrollView>
