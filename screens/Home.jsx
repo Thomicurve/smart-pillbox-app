@@ -1,23 +1,82 @@
 import React, { useState, useEffect } from 'react'
-
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
+
+import PillCard from '../components/PillCard';
+
 import usePills from '../hooks/usePills';
 import { MaterialIcons } from '@expo/vector-icons';
+import BackgroundJob from 'react-native-background-actions';
+import moment from 'moment';
 
+
+const notificationConfig = {
+    taskName: 'Example',
+    taskTitle: 'Corriendo...🔍',
+    taskDesc: 'Analizando pastillas',
+    taskIcon: {
+        name: 'ic_launcher',
+        type: 'mipmap',
+    },
+    color: '#072F4E',
+    parameters: {
+        delay: 5000,
+    },
+};
+
+const makeDelay = (time) => new Promise((resolve) => setTimeout(() => resolve(), time));
+let nextPillTime = {pillName: '', pillHour: ''};
+let takeThePill = false;
 
 export default function Home({ navigation }) {
-
+    
     const [reload, setReload] = useState(false);
     const [todayPills, setTodayPills] = useState([]);
     const [nextPill, setNextPill] = useState({ pillName: '', pillHour: '' });
     const [isLoading, setIsLoading] = useState(true);
     const { GetTodayPills, pills } = usePills();
 
+    // 
+    const verifyPillHour = async (taskData) => {
+        await new Promise(async (resolve) => {
+            const { delay } = taskData;
+            let hourNow = moment().format('LT');
+            
+            for (let i = 0; BackgroundJob.isRunning(); i++) {
+                let nextPillFormated = nextPillTime.pillHour.substring(1);
+                if(nextPillTime.pillHour[0] == '0') {
+                    if(nextPillFormated == moment().format('LT') || takeThePill == true) {
+                        takeThePill = true;
+                        console.log(`Debes tomar la pastilla ${nextPillTime.pillName} de las ${nextPillTime.pillHour}`)
+                    }
 
+                } else {
+                    if(hourNow == nextPillTime.pillHour ) {
+                        console.log(`Debes tomar la pastilla ${nextPillTime.pillName} de las ${nextPillTime.pillHour}`)
+                    }
+                }
+                await makeDelay(delay);
+            }
+        });
+    };
+
+    useEffect(() => {
+        async function handleBackgroundJobs () {
+            await BackgroundJob.start(verifyPillHour, notificationConfig);
+            console.log('Start tasks')
+        }
+        
+        handleBackgroundJobs();
+    }, [])
+
+    // ESTABLECER TODAS LAS PASTILLAS QUE SE VAN A MOSTRAR EN LA UI
     const callPills = async () => {
-        const todayPillsResult = GetTodayPills(reload);
+        const todayPillsResult = await GetTodayPills(reload);
         setTodayPills(todayPillsResult.todayPills);
         setNextPill(todayPillsResult.nextPillComplete);
+        
+        if(todayPillsResult.nextPillComplete != undefined) 
+            nextPillTime = todayPillsResult.nextPillComplete;
+
         setIsLoading(false);
     }
 
@@ -39,12 +98,15 @@ export default function Home({ navigation }) {
         navigation.navigate('NewPill')
     }
 
+    const handleTakeThePill = () => {
+        takeThePill = false;
+    }
 
 
 
 
     return (
-        <ScrollView >
+        <ScrollView scrollEnabled={true}>
             <View style={styles.container}>
                 <Text style={styles.title}>Próxima pastilla</Text>
                 {isLoading ?
@@ -74,11 +136,7 @@ export default function Home({ navigation }) {
                                 <View style={styles.todayPillsContainer}>
                                     {todayPills.map(pill => {
                                         return (
-                                            <View key={pill._id} style={styles.pillCard}>
-                                                <Text style={styles.pillName}>{pill.pillName}</Text>
-                                                <Text style={styles.pillHour}>{pill.pillHour}</Text>
-                                                <Text style={styles.pillAmount}>{pill.takenToday} / {pill.amount}</Text>
-                                            </View>
+                                            <PillCard pill={pill} key={pill._id}/>
                                         )
                                     })}
                                 </View>
@@ -94,6 +152,9 @@ export default function Home({ navigation }) {
                     <TouchableOpacity onPress={goToCreatePill} style={styles.newPillButton}>
                         <Text style={{color: '#fff', fontSize: 16, fontWeight: 'bold'}}>Nueva pastilla</Text>
                     </TouchableOpacity>
+                    <TouchableOpacity onPress={handleTakeThePill} style={styles.newPillButton}>
+                        <Text style={{color: '#fff', fontSize: 16, fontWeight: 'bold'}}>Listo!</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
         </ScrollView>
@@ -103,7 +164,7 @@ export default function Home({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         backgroundColor: '#072F4E',
-        height: 800
+        height: 1800
     },
     title: {
         color: '#fff',
@@ -158,42 +219,13 @@ const styles = StyleSheet.create({
         fontSize: 18,
         marginBottom: 10
     },
-    pillCard: {
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        width: '93%',
-        marginHorizontal: 'auto',
-        borderRadius: 5,
-        backgroundColor: '#1F547E',
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        marginBottom: 13
-    },
     todayPillsContainer: {
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
     },
-    pillName: {
-        color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 16
-    },
-    pillHour: {
-        color: '#2EF1C2',
-        textAlign: 'center',
-        fontWeight: 'bold',
-        fontSize: 16
-    },
-    pillAmount: {
-        color: '#2EF1C2',
-        textAlign: 'center',
-        fontWeight: 'bold',
-        fontSize: 16
-    },
+
     reloadButton: {
         backgroundColor: "#1F547E",
         width: 40,

@@ -71,16 +71,18 @@ const usePills = () => {
 
     const getHour = (pill) => {
         let hourChanged = pill.pillHour.split('').slice(0, 5).join('');
+
         if(hourChanged[0] == 0) hourChanged = hourChanged.slice(1, 5);
         hourChanged += `${pill.pillHour[6]+ pill.pillHour[7]}`;
+
         let finalHourComplete = moment(hourChanged, 'h:mma');
+
         if(finalHourComplete.isAfter(moment()) == true)  return pill;
         else return null 
     }
 
 
-
-    const GetTodayPills = (reloadFromHome) => {
+    const GetTodayPills = async (reloadFromHome) => {
         // FILTROS PARA OBTENER PASTILLA DEL DIA DE HOY
         setReload(reloadFromHome);
         // 1ER FILTRO: PASTILLAS DE HOY

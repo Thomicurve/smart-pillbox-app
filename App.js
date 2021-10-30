@@ -54,7 +54,7 @@ export default function App() {
 
             <Stack.Screen
               name="Home"
-              component={Example}
+              component={Home}
               options={loggedNavOptions}
             />
             <Stack.Screen

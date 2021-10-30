@@ -87,12 +87,12 @@ export default function NewPill({ navigation: { navigate } }) {
         } else {
             ToastAndroid.show(`${result.message}`, ToastAndroid.SHORT, ToastAndroid.TOP);
             setTimeout(() => {
-                navigate('Inicio');
+                navigate('Home');
             }, 2500)
         }
     }
 
-    const navigateToHome = () => navigate('Inicio');
+    const navigateToHome = () => navigate('Home');
 
     return (
         <View style={styles.containerStyles}>

@@ -41,7 +41,7 @@ function Example() {
             const { delay } = taskData;
             let count = 0;
             for (let i = 0; BackgroundJob.isRunning(); i++) {
-                if(count >= 10) {
+                if(count >= 5) {
                     console.log('Tomar pastilla!!!');
                 } else {
                     count++;
