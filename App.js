@@ -12,8 +12,6 @@ import Login from './screens/Login'
 import Home from './screens/Home'
 import NewPill from './screens/NewPill';
 
-import Example from './screens/Example';
-
 const Stack = createNativeStackNavigator();
 
 const noLoggedNavOptions = {

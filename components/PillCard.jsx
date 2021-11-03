@@ -3,13 +3,20 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons';
 
 
-export default function PillCard({pill}) {
+export default function PillCard({pill, setPills, todayPills}) {
+
+    const deletePills = (pillID) => {
+        const pillsWithoutSelected = todayPills.filter(({_id}) => _id !== pillID);
+        setPills(pillsWithoutSelected)
+    }
+
+
     return (
         <View style={styles.pillCard}>
             <Text style={styles.pillName}>{pill.pillName}</Text>
             <Text style={styles.pillHour}>{pill.pillHour}</Text>
             <Text style={styles.pillAmount}>{pill.takenToday} / {pill.amount}</Text>
-            <TouchableOpacity><MaterialIcons name="delete" color="#fff" size={24} /></TouchableOpacity>
+            <TouchableOpacity onPress={() => deletePills(pill._id)}><MaterialIcons  name="delete" color="#fff" size={24} /></TouchableOpacity>
         </View>
     )
 }

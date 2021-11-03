@@ -22,7 +22,6 @@
     "moment": "^2.29.1",
     "react": "16.13.1",
     "react-dom": "16.13.1",
-    "react-hook-form": "^7.15.0",
     "react-native": "~0.63.4",
     "react-native-background-actions": "^2.6.5",
     "react-native-elements": "^3.4.2",

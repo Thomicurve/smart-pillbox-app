@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
-
-import PillCard from '../components/PillCard';
-
-import usePills from '../hooks/usePills';
-import { MaterialIcons } from '@expo/vector-icons';
+import { useIsFocused } from '@react-navigation/native';
 import BackgroundJob from 'react-native-background-actions';
 import moment from 'moment';
+
+
+import usePills from '../hooks/usePills';
+import PillCard from '../components/PillCard';
 
 
 const notificationConfig = {
@@ -29,7 +29,7 @@ let takeThePill = false;
 
 export default function Home({ navigation }) {
     
-    const [reload, setReload] = useState(false);
+    const isFocused = useIsFocused();
     const [todayPills, setTodayPills] = useState([]);
     const [nextPill, setNextPill] = useState({ pillName: '', pillHour: '' });
     const [isLoading, setIsLoading] = useState(true);
@@ -70,7 +70,7 @@ export default function Home({ navigation }) {
 
     // ESTABLECER TODAS LAS PASTILLAS QUE SE VAN A MOSTRAR EN LA UI
     const callPills = async () => {
-        const todayPillsResult = await GetTodayPills(reload);
+        const todayPillsResult = await GetTodayPills(isFocused);
         setTodayPills(todayPillsResult.todayPills);
         setNextPill(todayPillsResult.nextPillComplete);
         
@@ -80,19 +80,14 @@ export default function Home({ navigation }) {
         setIsLoading(false);
     }
 
-    const handleReload = () => {
-        setReload(!reload);
-    }
-
     useEffect(() => {
         callPills();
-        setTimeout(() => handleReload(), 2000);
     }, [])
 
     useEffect(() => {
         setIsLoading(true);
         callPills();
-    }, [pills, reload])
+    }, [pills, isFocused])
 
     const goToCreatePill = () => {
         navigation.navigate('NewPill')
@@ -136,7 +131,7 @@ export default function Home({ navigation }) {
                                 <View style={styles.todayPillsContainer}>
                                     {todayPills.map(pill => {
                                         return (
-                                            <PillCard pill={pill} key={pill._id}/>
+                                            <PillCard pill={pill} todayPills={todayPills} setPills={setTodayPills} key={pill._id}/>
                                         )
                                     })}
                                 </View>
@@ -146,9 +141,6 @@ export default function Home({ navigation }) {
 
                 }
                 <View style={styles.pillsButtons}>
-                    <TouchableOpacity style={styles.reloadButton} onPress={handleReload}>
-                        <MaterialIcons name="autorenew" size={30} color="white" />
-                    </TouchableOpacity>
                     <TouchableOpacity onPress={goToCreatePill} style={styles.newPillButton}>
                         <Text style={{color: '#fff', fontSize: 16, fontWeight: 'bold'}}>Nueva pastilla</Text>
                     </TouchableOpacity>
