@@ -4,6 +4,9 @@ import { useIsFocused } from '@react-navigation/native';
 import BackgroundJob from 'react-native-background-actions';
 import moment from 'moment';
 
+import ReactAlarm from 'react-native-alarm-notification';
+// const fireDate = ReactAlarm.parseDate(new Date(Date.now() + 1000));
+
 
 import usePills from '../hooks/usePills';
 import PillCard from '../components/PillCard';
@@ -36,6 +39,17 @@ export default function Home({ navigation }) {
     const [isLoading, setIsLoading] = useState(true);
     const { GetTodayPills, pills } = usePills();
 
+    const pushNotification = async ({ pillName, pillHour }) => {
+        const alarmNotifData = {
+            title: `Debe tomar ${pillName} de las ${pillHour}`,
+            message: "Ya es hora de tomar su pastilla",
+            channel: "my_channel_id",
+            small_icon: "ic_launcher",
+        };
+        R
+        ReactAlarm.sendNotification(alarmNotifData);
+    }
+
     // 
     const verifyPillHour = async (taskData) => {
         await new Promise(async () => {
@@ -47,12 +61,12 @@ export default function Home({ navigation }) {
                 if (nextPillTime.pillHour[0] == '0') {
                     if (nextPillFormated == moment().format('LT') || takeThePill == true) {
                         takeThePill = true;
-                        console.log(`Debes tomar la pastilla ${nextPillTime.pillName} de las ${nextPillTime.pillHour}`)
+                        pushNotification(nextPillTime)
                     }
 
                 } else {
                     if (hourNow == nextPillTime.pillHour) {
-                        console.log(`Debes tomar la pastilla ${nextPillTime.pillName} de las ${nextPillTime.pillHour}`)
+                        pushNotification(nextPillTime);
                     }
                 }
                 await makeDelay(delay);
