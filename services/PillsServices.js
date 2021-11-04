@@ -1,17 +1,10 @@
 import axios from 'axios'
 
 const apiLink = 'https://smart-pillbox-api.herokuapp.com';
-const headerOptions = (token) => {
-    return {
-        headers: {
-            "x-access-token": token
-        }
-    }
-} 
 
 const GetPills = async ( token ) => {
     try {
-        const {data} = await axios.get(`${apiLink}/pills`, headerOptions(token));
+        const {data} = await axios.get(`${apiLink}/pills`, {headers: {"x-access-token": token}});
         return data.pills;
     } catch(err) {
         return alert(err)
@@ -36,13 +29,29 @@ const UploadPills = async (token, dataObj) => {
     }}
 }
 
+const DeletePills = async (token, pillID) => {
+    try{
+        const { data } = await axios({
+            method: 'DELETE',
+            url: `${apiLink}/delete-pill/${pillID}`,
+            headers: {
+                "x-access-token": token
+            }
+        })
+
+        return data;
+    } catch (err) {
+        return console.error(`Error eliminando pastillas: ${error}`);
+    }
+}
+
 const GetRecords = async ( token ) => {
     try {
-        const {data} = await axios.get(`${apiLink}/records`, headerOptions(token));
+        const {data} = await axios.get(`${apiLink}/records`, {headers: {"x-access-token": token}});
         return data.records;
     } catch(err) {
         return alert(err)
     }
 }
 
-export {GetPills, GetRecords, UploadPills};
+export {GetPills, GetRecords, UploadPills, DeletePills};

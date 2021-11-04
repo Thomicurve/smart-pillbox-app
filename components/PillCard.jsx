@@ -1,13 +1,21 @@
-import React from 'react'
+import React, {useContext} from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons';
+import { DeletePills } from '../services/PillsServices';
+import TokenContext from '../context/TokenContext';
 
 
 export default function PillCard({pill, setPills, todayPills}) {
 
-    const deletePills = (pillID) => {
+    const { token } = useContext(TokenContext);
+
+    const deletePills = async (pillID) => {
         const pillsWithoutSelected = todayPills.filter(({_id}) => _id !== pillID);
-        setPills(pillsWithoutSelected)
+        const deleteResult = await DeletePills(token, pillID);
+        
+        if(!deleteResult.done) return alert(deleteResult.message);
+        
+        setPills(pillsWithoutSelected);
     }
 
 
