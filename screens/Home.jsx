@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native'
 import { useIsFocused } from '@react-navigation/native';
 import BackgroundJob from 'react-native-background-actions';
 import moment from 'moment';
@@ -24,12 +24,13 @@ const notificationConfig = {
 };
 
 const makeDelay = (time) => new Promise((resolve) => setTimeout(() => resolve(), time));
-let nextPillTime = {pillName: '', pillHour: ''};
+let nextPillTime = { pillName: '', pillHour: '' };
 let takeThePill = false;
 
 export default function Home({ navigation }) {
-    
+
     const isFocused = useIsFocused();
+    const [changeReload, setChangeReload] = useState(false);
     const [todayPills, setTodayPills] = useState([]);
     const [nextPill, setNextPill] = useState({ pillName: '', pillHour: '' });
     const [isLoading, setIsLoading] = useState(true);
@@ -37,20 +38,20 @@ export default function Home({ navigation }) {
 
     // 
     const verifyPillHour = async (taskData) => {
-        await new Promise(async (resolve) => {
+        await new Promise(async () => {
             const { delay } = taskData;
             let hourNow = moment().format('LT');
-            
+
             for (let i = 0; BackgroundJob.isRunning(); i++) {
                 let nextPillFormated = nextPillTime.pillHour.substring(1);
-                if(nextPillTime.pillHour[0] == '0') {
-                    if(nextPillFormated == moment().format('LT') || takeThePill == true) {
+                if (nextPillTime.pillHour[0] == '0') {
+                    if (nextPillFormated == moment().format('LT') || takeThePill == true) {
                         takeThePill = true;
                         console.log(`Debes tomar la pastilla ${nextPillTime.pillName} de las ${nextPillTime.pillHour}`)
                     }
 
                 } else {
-                    if(hourNow == nextPillTime.pillHour ) {
+                    if (hourNow == nextPillTime.pillHour) {
                         console.log(`Debes tomar la pastilla ${nextPillTime.pillName} de las ${nextPillTime.pillHour}`)
                     }
                 }
@@ -60,34 +61,30 @@ export default function Home({ navigation }) {
     };
 
     useEffect(() => {
-        async function handleBackgroundJobs () {
+        async function handleBackgroundJobs() {
             await BackgroundJob.start(verifyPillHour, notificationConfig);
             console.log('Start tasks')
         }
-        
+
         handleBackgroundJobs();
     }, [])
 
     // ESTABLECER TODAS LAS PASTILLAS QUE SE VAN A MOSTRAR EN LA UI
     const callPills = async () => {
-        const todayPillsResult = await GetTodayPills(isFocused);
+        const todayPillsResult = await GetTodayPills();
         setTodayPills(todayPillsResult.todayPills);
         setNextPill(todayPillsResult.nextPillComplete);
-        
-        if(todayPillsResult.nextPillComplete != undefined) 
+
+        if (todayPillsResult.nextPillComplete != undefined)
             nextPillTime = todayPillsResult.nextPillComplete;
 
         setIsLoading(false);
     }
 
     useEffect(() => {
-        callPills();
-    }, [])
-
-    useEffect(() => {
         setIsLoading(true);
         callPills();
-    }, [pills, isFocused])
+    }, [pills, isFocused, changeReload])
 
     const goToCreatePill = () => {
         navigation.navigate('NewPill')
@@ -101,8 +98,8 @@ export default function Home({ navigation }) {
 
 
     return (
-        <ScrollView scrollEnabled={true}>
-            <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
+            <ScrollView scrollEnabled={true}>
                 <Text style={styles.title}>Próxima pastilla</Text>
                 {isLoading ?
                     <View>
@@ -131,32 +128,38 @@ export default function Home({ navigation }) {
                                 <View style={styles.todayPillsContainer}>
                                     {todayPills.map(pill => {
                                         return (
-                                            <PillCard pill={pill} todayPills={todayPills} setPills={setTodayPills} key={pill._id}/>
+                                            <PillCard
+                                                pill={pill}
+                                                todayPills={todayPills}
+                                                setPills={setTodayPills}
+                                                key={pill._id}
+                                                setChangeReload={setChangeReload}
+                                                changeReload={changeReload}
+                                            />
                                         )
                                     })}
                                 </View>
                             </View>
                         }
                     </View>
-
                 }
                 <View style={styles.pillsButtons}>
                     <TouchableOpacity onPress={goToCreatePill} style={styles.newPillButton}>
-                        <Text style={{color: '#fff', fontSize: 16, fontWeight: 'bold'}}>Nueva pastilla</Text>
+                        <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Nueva pastilla</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={handleTakeThePill} style={styles.newPillButton}>
-                        <Text style={{color: '#fff', fontSize: 16, fontWeight: 'bold'}}>Listo!</Text>
+                        <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Listo!</Text>
                     </TouchableOpacity>
                 </View>
-            </View>
-        </ScrollView>
+            </ScrollView>
+        </SafeAreaView>
     )
 }
 
 const styles = StyleSheet.create({
     container: {
         backgroundColor: '#072F4E',
-        height: 1800
+        flex: 1,
     },
     title: {
         color: '#fff',
@@ -168,7 +171,7 @@ const styles = StyleSheet.create({
     nextPillContainer: {
         backgroundColor: '#1F547E',
         width: '70%',
-        height: '20%',
+        height: 120,
         marginLeft: 'auto',
         marginRight: 'auto',
         borderRadius: 15,
@@ -236,8 +239,10 @@ const styles = StyleSheet.create({
         width: '80%',
         marginLeft: 'auto',
         marginRight: 'auto',
-        position: 'relative',
-        top: -30
+        marginBottom: 30,
+        marginTop: 30,
+        // position: 'absolute',
+        // top: 100
     },
     newPillButton: {
         backgroundColor: "#1F547E",

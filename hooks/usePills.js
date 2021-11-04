@@ -10,7 +10,6 @@ const apiLink = 'https://smart-pillbox-api.herokuapp.com';
 const usePills = () => {
     const { token } = useContext(TokenContext);
     const [thisDay] = useState(moment().format('dddd'));
-    const [reload, setReload] = useState(false);
 
     const [pillsAndRecords, setPillsAndRecords] = useState({ pills: [], records: [] });
 
@@ -45,10 +44,10 @@ const usePills = () => {
         }
     }
 
+
     useEffect(() => {
-        GetPillsAndRecords()
-        GetTodayPills(reload);
-    }, [token, reload])
+        GetPillsAndRecords();
+    }, [token])
 
 
     const getTodayRecords = (todayPills) => {
@@ -72,19 +71,20 @@ const usePills = () => {
     const getHour = (pill) => {
         let hourChanged = pill.pillHour.split('').slice(0, 5).join('');
 
-        if(hourChanged[0] == 0) hourChanged = hourChanged.slice(1, 5);
-        hourChanged += `${pill.pillHour[6]+ pill.pillHour[7]}`;
+        if (hourChanged[0] == 0) hourChanged = hourChanged.slice(1, 5);
+        hourChanged += `${pill.pillHour[6] + pill.pillHour[7]}`;
 
         let finalHourComplete = moment(hourChanged, 'h:mma');
 
-        if(finalHourComplete.isAfter(moment()) == true)  return pill;
-        else return null 
+        if (finalHourComplete.isAfter(moment()) == true) return pill;
+        else return null
     }
 
 
-    const GetTodayPills = async (reloadFromHome) => {
+    const GetTodayPills = async () => {
         // FILTROS PARA OBTENER PASTILLA DEL DIA DE HOY
-        setReload(reloadFromHome);
+        GetPillsAndRecords();
+
         // 1ER FILTRO: PASTILLAS DE HOY
         const todayPills = pillsAndRecords.pills.filter(pill => pill.repeat.toString().split('').includes(days[thisDay]));
 
@@ -98,11 +98,11 @@ const usePills = () => {
         let pillsRemainingResult = todayPills.map(pill => {
             return getHour(pill);
         })
-        
-        
+
+
         // 4TO FILTRO: FILTRAR LAS PASTILLAS QUE NO SON NULAS
         pillsRemainingResult = pillsRemainingResult.filter(pill => (pill !== undefined && pill !== null));
-        
+
         // 5TO FILTRO: ORDENAR LAS PASTILLAS QUE SIGUEN DE LA MAS CERCANA AL HORARIO ACTUAL A LA MAS LEJANA
         let nextPill = [];
         pillsRemainingResult.forEach(({ pillHour }) => {
@@ -111,17 +111,17 @@ const usePills = () => {
 
         const nextPillAM = [];
         nextPill.forEach(pill => {
-            if(pill.includes('AM')) {
+            if (pill.includes('AM')) {
                 nextPillAM.push(pill);
             }
         })
 
-        if(nextPillAM.length != 0) nextPill = nextPillAM;
+        if (nextPillAM.length != 0) nextPill = nextPillAM;
         nextPill = nextPill.sort().shift();
-        
+
         //Obtener todos los datos de la pastilla filtrada
         let nextPillComplete = pillsRemainingResult.filter(({ pillHour }) => pillHour.includes(nextPill));
-        
+
         nextPillComplete = nextPillComplete[0];
 
         return { pillsRemainingResult, nextPillComplete, todayPills };

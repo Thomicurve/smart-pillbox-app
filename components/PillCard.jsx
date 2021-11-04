@@ -1,21 +1,21 @@
-import React, {useContext} from 'react'
+import React, { useContext } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons';
 import { DeletePills } from '../services/PillsServices';
 import TokenContext from '../context/TokenContext';
 
 
-export default function PillCard({pill, setPills, todayPills}) {
+export default function PillCard({ pill, setPills, todayPills, setChangeReload, changeReload }) {
 
     const { token } = useContext(TokenContext);
 
     const deletePills = async (pillID) => {
-        const pillsWithoutSelected = todayPills.filter(({_id}) => _id !== pillID);
+        const pillsWithoutSelected = todayPills.filter(({ _id }) => _id !== pillID);
         const deleteResult = await DeletePills(token, pillID);
-        
-        if(!deleteResult.done) return alert(deleteResult.message);
-        
+        setChangeReload(!changeReload);
         setPills(pillsWithoutSelected);
+
+        if (!deleteResult.done) return alert(deleteResult.message);
     }
 
 
@@ -24,7 +24,7 @@ export default function PillCard({pill, setPills, todayPills}) {
             <Text style={styles.pillName}>{pill.pillName}</Text>
             <Text style={styles.pillHour}>{pill.pillHour}</Text>
             <Text style={styles.pillAmount}>{pill.takenToday} / {pill.amount}</Text>
-            <TouchableOpacity onPress={() => deletePills(pill._id)}><MaterialIcons  name="delete" color="#fff" size={24} /></TouchableOpacity>
+            <TouchableOpacity onPress={() => deletePills(pill._id)}><MaterialIcons name="delete" color="#fff" size={24} /></TouchableOpacity>
         </View>
     )
 }
