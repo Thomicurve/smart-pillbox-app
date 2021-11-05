@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Button } from 'react-native'
 import { useIsFocused } from '@react-navigation/native';
 import BackgroundJob from 'react-native-background-actions';
 import moment from 'moment';
+
+//imports Alan
+import BleManager from 'react-native-ble-manager';
+import { stringToBytes } from "convert-string";
+//imports Alan - end
 
 import ReactAlarm from 'react-native-alarm-notification';
 // const fireDate = ReactAlarm.parseDate(new Date(Date.now() + 1000));
@@ -32,6 +37,109 @@ let takeThePill = false;
 
 export default function Home({ navigation }) {
 
+
+    //variables Alan
+    let btCelular = false; //bt celular esta enacendido?
+    let btConectado = false; //bt celular y arduino estan contactados?
+    const ID_HM10 = '50:33:8B:13:5D:01'; //ID del bluetooth del arduino
+
+    function delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    //1- Funcion Comprobar si el bluetooth del celular esta encendido y permitido
+    async function checkBT_device() {
+        await BleManager.enableBluetooth()
+            .then(() => {
+                btCelular = true;
+                console.info("El bluetooth ya esta encendido");
+            })
+            .catch((error) => {
+                btCelular = false;
+                console.error("El usuario no permite activar el bluetooth");
+                console.error(error);
+            });
+    }
+
+    //2- Funcion escanear dispositivos en 3seg
+    async function scanDevices() {
+        await BleManager.scan([], 3, true).then(() => {
+            console.info("Empezando escaneo...");
+        });
+        await delay(3000); //esperar 3 segundos
+        await BleManager.stopScan().then(() => { //Detener el escaneo
+            console.log("Scan stopped");
+        });
+    }
+
+    //3- Funcion conectar al arduino
+    async function conectar() {
+        await BleManager.connect(ID_HM10)
+            .then(async () => {
+                // Success code
+                console.log("Connected");
+                await BleManager.retrieveServices(ID_HM10).then(
+                    (peripheralInfo) => {
+                        // Success code
+                        // console.log("Peripheral info:", peripheralInfo);
+                    }
+                );
+            })
+            .catch((error) => {
+                // Failure code
+                console.error(error);
+            });
+    }
+
+    //4- Funcion revisar conexion con el celular y el arduino
+    async function checkArduino_Connected() {
+        await BleManager.isPeripheralConnected(
+            ID_HM10,
+            []
+        ).then((isConnected) => {
+            btConectado = isConnected;
+            if (isConnected) {
+                console.log("Peripheral is connected!");
+                setInterval(apagar, 300);
+            } else {
+                console.log("Peripheral is NOT connected!");
+            }
+        });
+    }
+
+    // Funcion Apagar BUZZER
+    async function apagar() {
+        const data = stringToBytes('0');
+        await BleManager.write(
+            ID_HM10,
+            "0000ffe0-0000-1000-8000-00805f9b34fb",
+            "0000ffe1-0000-1000-8000-00805f9b34fb",
+            data
+        )
+            .then(() => {
+                // Success code
+                // console.log("Write: " + data);
+            })
+            .catch((error) => {
+                console.error(error);
+                // NOTIFIACION CELULAR DE PASTILLERO DESCONECTADO AQUI
+            });
+    }
+
+    //Funcion mostrar RSSI señal
+    async function showRSSI() {
+        await BleManager.readRSSI(ID_HM10)
+            .then((rssi) => {
+                // Success code
+                console.log("Current RSSI: " + rssi);
+            })
+            .catch((error) => {
+                // Failure code
+                console.error(error);
+            });
+    }
+    //variables Alan - end
+
     const isFocused = useIsFocused();
     const [changeReload, setChangeReload] = useState(false);
     const [todayPills, setTodayPills] = useState([]);
@@ -46,7 +154,6 @@ export default function Home({ navigation }) {
             channel: "my_channel_id",
             small_icon: "ic_launcher",
         };
-        R
         ReactAlarm.sendNotification(alarmNotifData);
     }
 
@@ -61,7 +168,7 @@ export default function Home({ navigation }) {
                 if (nextPillTime.pillHour[0] == '0') {
                     if (nextPillFormated == moment().format('LT') || takeThePill == true) {
                         takeThePill = true;
-                        pushNotification(nextPillTime)
+                        pushNotification(nextPillTime);
                     }
 
                 } else {
@@ -73,6 +180,9 @@ export default function Home({ navigation }) {
             }
         });
     };
+
+
+
 
     useEffect(() => {
         async function handleBackgroundJobs() {
@@ -107,6 +217,34 @@ export default function Home({ navigation }) {
     const handleTakeThePill = () => {
         takeThePill = false;
     }
+
+
+    useEffect(() => {
+
+        async function bluetooth() {
+            // Iniciar modulo bluetooth de la libreria
+            await BleManager.start({ showAlert: true }).then(() => {
+                console.info("Libreria iniciada...");
+            });
+            await checkBT_device();
+            if (btCelular) { //si el bluetooth esta encendido y permitido
+                await scanDevices();
+                await conectar();
+                await checkArduino_Connected();
+                if (btConectado) {
+                } else {
+                    console.error("No se pudo conectar con el arduino");
+                }
+            } else {
+                console.error("El bluetooth no esta encendido");
+            }
+
+
+
+        }
+        bluetooth();
+
+    }, [])
 
 
 
@@ -164,6 +302,12 @@ export default function Home({ navigation }) {
                     <TouchableOpacity onPress={handleTakeThePill} style={styles.newPillButton}>
                         <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Listo!</Text>
                     </TouchableOpacity>
+                </View>
+                <View>
+                    <Button
+                        title="Mostrar potencia antena"
+                        onPress={() => showRSSI()}
+                    />
                 </View>
             </ScrollView>
         </SafeAreaView>
