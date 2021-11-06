@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import {
     View, Text, StyleSheet, ScrollView,
-    TouchableOpacity, SafeAreaView, Button, Modal
+    TouchableOpacity, SafeAreaView, Pressable, Modal
 } from 'react-native'
 import { useIsFocused } from '@react-navigation/native';
 import BackgroundJob from 'react-native-background-actions';
@@ -35,6 +35,7 @@ const notificationConfig = {
 const Delay = (time) => new Promise((resolve) => setTimeout(() => resolve(), time));
 let nextPillTime = { pillName: '', pillHour: '' };
 let takeThePill = false;
+let pillTaked = false;
 
 export default function Home({ navigation }) {
 
@@ -154,9 +155,22 @@ export default function Home({ navigation }) {
                 channel: "my_channel_id",
                 small_icon: "ic_launcher",
             };
+            setModalVisible(true);
             ReactAlarm.sendNotification(alarmNotifData);
         }
     }
+
+    // PARAR ALARMA
+    useEffect(() => {
+        async function getAlarms () {
+            const result = await ReactAlarm.getScheduledAlarms();
+            if(result.length !== 0) {
+                ReactAlarm.stopAlarmSound();
+            } 
+        }
+
+        getAlarms();
+    }, [pillTaked])
 
     // VERIFICAR CADA X TIEMPO SI ES LA HORA DE LA PASTILLA
     const verifyPillHour = async (taskData) => {
@@ -190,7 +204,6 @@ export default function Home({ navigation }) {
     useEffect(() => {
         async function handleBackgroundJobs() {
             await BackgroundJob.start(verifyPillHour, notificationConfig);
-            console.log('Start tasks')
         }
 
         handleBackgroundJobs();
@@ -302,43 +315,35 @@ export default function Home({ navigation }) {
                     <TouchableOpacity onPress={goToCreatePill} style={styles.newPillButton}>
                         <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Nueva pastilla</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.newPillButton}>
-                        <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Listo!</Text>
-                    </TouchableOpacity>
                     <Modal
                         animationType="slide"
                         transparent={true}
                         visible={modalVisible}
-                        onRequestClose={() => {
-                            Alert.alert("Modal has been closed.");
-                            setModalVisible(!modalVisible);
-                        }}
                     >
                         <View style={styles.centeredView}>
                             <View style={styles.modalView}>
-                                <Text style={styles.modalText}>Debe tomar la pastilla!</Text>
-                                <TouchableOpacity
+                                <Text style={styles.modalText}>Debes tomar la pastilla {nextPillTime.pillName} de las {nextPillTime.pillHour}</Text>
+                                <Pressable
                                     style={[styles.button, styles.buttonClose]}
-                                    onPress={() => setModalVisible(!modalVisible)}
+                                    onPress={() => {pillTaked = true; setModalVisible(false)}}
                                 >
                                     <Text style={styles.textStyle}>Ya la tomé!</Text>
-                                </TouchableOpacity>
+                                </Pressable>
                             </View>
                         </View>
-                        <View style={styles.backgroundModal} />
+                        <View style={styles.backgroundModal}></View>
                     </Modal>
 
                 </View>
                 <View>
                     <TouchableOpacity
-                    style={styles.newPillButton}
+                        style={styles.newPillButton}
                         title="Mostrar potencia antena"
                         onPress={() => showRSSI()}
                     >
                         <Text style={styles.textStyle}>Mostrar potencia antena</Text>
                     </TouchableOpacity>
                 </View>
-                {/* {modalVisible && } */}
             </ScrollView>
         </SafeAreaView>
     )
@@ -352,13 +357,16 @@ const styles = StyleSheet.create({
         left: 0,
         width: '100%',
         height: '100%',
-        opacity: 0.9
+        opacity: 0.9,
+        zIndex: 0
     },
     centeredView: {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        marginTop: 22
+        marginTop: 22,
+        position: 'relative',
+        zIndex: 1
     },
     modalView: {
         margin: 20,
