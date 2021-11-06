@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Button } from 'react-native'
+import {
+    View, Text, StyleSheet, ScrollView,
+    TouchableOpacity, SafeAreaView, Button, Modal
+} from 'react-native'
 import { useIsFocused } from '@react-navigation/native';
 import BackgroundJob from 'react-native-background-actions';
 import moment from 'moment';
+import ReactAlarm from 'react-native-alarm-notification';
 
 //imports Alan
 import BleManager from 'react-native-ble-manager';
 import { stringToBytes } from "convert-string";
 //imports Alan - end
-
-import ReactAlarm from 'react-native-alarm-notification';
-// const fireDate = ReactAlarm.parseDate(new Date(Date.now() + 1000));
 
 
 import usePills from '../hooks/usePills';
@@ -31,7 +32,7 @@ const notificationConfig = {
     },
 };
 
-const makeDelay = (time) => new Promise((resolve) => setTimeout(() => resolve(), time));
+const Delay = (time) => new Promise((resolve) => setTimeout(() => resolve(), time));
 let nextPillTime = { pillName: '', pillHour: '' };
 let takeThePill = false;
 
@@ -42,10 +43,6 @@ export default function Home({ navigation }) {
     let btCelular = false; //bt celular esta enacendido?
     let btConectado = false; //bt celular y arduino estan contactados?
     const ID_HM10 = '50:33:8B:13:5D:01'; //ID del bluetooth del arduino
-
-    function delay(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
 
     //1- Funcion Comprobar si el bluetooth del celular esta encendido y permitido
     async function checkBT_device() {
@@ -66,7 +63,7 @@ export default function Home({ navigation }) {
         await BleManager.scan([], 3, true).then(() => {
             console.info("Empezando escaneo...");
         });
-        await delay(3000); //esperar 3 segundos
+        await Delay(3000); //esperar 3 segundos
         await BleManager.stopScan().then(() => { //Detener el escaneo
             console.log("Scan stopped");
         });
@@ -145,45 +142,51 @@ export default function Home({ navigation }) {
     const [todayPills, setTodayPills] = useState([]);
     const [nextPill, setNextPill] = useState({ pillName: '', pillHour: '' });
     const [isLoading, setIsLoading] = useState(true);
+    const [modalVisible, setModalVisible] = useState(false);
     const { GetTodayPills, pills } = usePills();
 
+    // ENVIAR NOTIFICACIÓN
     const pushNotification = async ({ pillName, pillHour }) => {
-        const alarmNotifData = {
-            title: `Debe tomar ${pillName} de las ${pillHour}`,
-            message: "Ya es hora de tomar su pastilla",
-            channel: "my_channel_id",
-            small_icon: "ic_launcher",
-        };
-        ReactAlarm.sendNotification(alarmNotifData);
+        if (takeThePill == false) {
+            const alarmNotifData = {
+                title: `Debe tomar ${pillName} de las ${pillHour}`,
+                message: "Ya es hora de tomar su pastilla",
+                channel: "my_channel_id",
+                small_icon: "ic_launcher",
+            };
+            ReactAlarm.sendNotification(alarmNotifData);
+        }
     }
 
-    // 
+    // VERIFICAR CADA X TIEMPO SI ES LA HORA DE LA PASTILLA
     const verifyPillHour = async (taskData) => {
         await new Promise(async () => {
             const { delay } = taskData;
-            let hourNow = moment().format('LT');
+
 
             for (let i = 0; BackgroundJob.isRunning(); i++) {
                 let nextPillFormated = nextPillTime.pillHour.substring(1);
+                let hourNow = moment().format('LT');
                 if (nextPillTime.pillHour[0] == '0') {
-                    if (nextPillFormated == moment().format('LT') || takeThePill == true) {
-                        takeThePill = true;
+                    if (nextPillFormated == hourNow || takeThePill == true) {
                         pushNotification(nextPillTime);
+                        takeThePill = true;
                     }
 
                 } else {
-                    if (hourNow == nextPillTime.pillHour) {
+                    if (hourNow == nextPillFormated || takeThePill == true) {
                         pushNotification(nextPillTime);
+                        takeThePill = true;
                     }
                 }
-                await makeDelay(delay);
+                await Delay(delay);
             }
         });
     };
 
 
 
-
+    // COMENZAR TAREAS EN SEGUNDO PLANO
     useEffect(() => {
         async function handleBackgroundJobs() {
             await BackgroundJob.start(verifyPillHour, notificationConfig);
@@ -233,7 +236,7 @@ export default function Home({ navigation }) {
                 await checkArduino_Connected();
                 if (btConectado) {
                 } else {
-                    console.error("No se pudo conectar con el arduino");
+                    console.error("No se pudo conectar con el pastillero");
                 }
             } else {
                 console.error("El bluetooth no esta encendido");
@@ -299,22 +302,99 @@ export default function Home({ navigation }) {
                     <TouchableOpacity onPress={goToCreatePill} style={styles.newPillButton}>
                         <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Nueva pastilla</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={handleTakeThePill} style={styles.newPillButton}>
+                    <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.newPillButton}>
                         <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Listo!</Text>
                     </TouchableOpacity>
+                    <Modal
+                        animationType="slide"
+                        transparent={true}
+                        visible={modalVisible}
+                        onRequestClose={() => {
+                            Alert.alert("Modal has been closed.");
+                            setModalVisible(!modalVisible);
+                        }}
+                    >
+                        <View style={styles.centeredView}>
+                            <View style={styles.modalView}>
+                                <Text style={styles.modalText}>Debe tomar la pastilla!</Text>
+                                <TouchableOpacity
+                                    style={[styles.button, styles.buttonClose]}
+                                    onPress={() => setModalVisible(!modalVisible)}
+                                >
+                                    <Text style={styles.textStyle}>Ya la tomé!</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                        <View style={styles.backgroundModal} />
+                    </Modal>
+
                 </View>
                 <View>
-                    <Button
+                    <TouchableOpacity
+                    style={styles.newPillButton}
                         title="Mostrar potencia antena"
                         onPress={() => showRSSI()}
-                    />
+                    >
+                        <Text style={styles.textStyle}>Mostrar potencia antena</Text>
+                    </TouchableOpacity>
                 </View>
+                {/* {modalVisible && } */}
             </ScrollView>
         </SafeAreaView>
     )
 }
 
 const styles = StyleSheet.create({
+    backgroundModal: {
+        position: 'absolute',
+        backgroundColor: '#000',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        opacity: 0.9
+    },
+    centeredView: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        marginTop: 22
+    },
+    modalView: {
+        margin: 20,
+        backgroundColor: "white",
+        borderRadius: 20,
+        padding: 35,
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5
+    },
+    button: {
+        borderRadius: 20,
+        padding: 10,
+        elevation: 2
+    },
+    buttonOpen: {
+        backgroundColor: "#F194FF",
+    },
+    buttonClose: {
+        backgroundColor: "#2196F3",
+    },
+    textStyle: {
+        color: "white",
+        fontWeight: "bold",
+        textAlign: "center"
+    },
+    modalText: {
+        marginBottom: 15,
+        textAlign: "center"
+    },
     container: {
         backgroundColor: '#072F4E',
         flex: 1,
