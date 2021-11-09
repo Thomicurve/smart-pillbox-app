@@ -6,11 +6,10 @@ import axios from 'axios'
 const apiLink = 'https://smart-pillbox-api.herokuapp.com';
 
 
-
 const usePills = () => {
     const { token } = useContext(TokenContext);
     const [thisDay] = useState(moment().format('dddd'));
-
+    
     const [pillsAndRecords, setPillsAndRecords] = useState({ pills: [], records: [] });
 
     const days = {
@@ -30,7 +29,6 @@ const usePills = () => {
             }
         }
     }
-
 
     const GetPillsAndRecords = async () => {
         if (!token) return false;
@@ -76,6 +74,7 @@ const usePills = () => {
 
         let finalHourComplete = moment(hourChanged, 'h:mma');
 
+        if(moment(finalHourComplete).format('LT') === moment().format('LT')) return pill;
         if (finalHourComplete.isAfter(moment()) == true) return pill;
         else return null
     }

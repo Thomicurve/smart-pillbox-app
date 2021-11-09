@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
+import TokenContext from '../context/TokenContext';
 import {
     View, Text, StyleSheet, ScrollView,
     TouchableOpacity, SafeAreaView, Pressable, Modal
@@ -15,6 +16,7 @@ import { stringToBytes } from "convert-string";
 
 
 import usePills from '../hooks/usePills';
+import { SubmitRecords } from '../services/RecordsServices'
 import PillCard from '../components/PillCard';
 
 
@@ -28,7 +30,7 @@ const notificationConfig = {
     },
     color: '#072F4E',
     parameters: {
-        delay: 5000,
+        delay: 3000,
     },
 };
 
@@ -36,6 +38,7 @@ const Delay = (time) => new Promise((resolve) => setTimeout(() => resolve(), tim
 let nextPillTime = { pillName: '', pillHour: '' };
 let takeThePill = false;
 let pillTaked = false;
+let pillsRemaining = 0;
 
 export default function Home({ navigation }) {
 
@@ -139,16 +142,31 @@ export default function Home({ navigation }) {
     //variables Alan - end
 
     const isFocused = useIsFocused();
+
     const [changeReload, setChangeReload] = useState(false);
     const [todayPills, setTodayPills] = useState([]);
-    const [nextPill, setNextPill] = useState({ pillName: '', pillHour: '' });
-    const [isLoading, setIsLoading] = useState(true);
+    const [nextPill, setNextPill] = useState({ pillName: '', pillHour: '', amount: 0 });
     const [modalVisible, setModalVisible] = useState(false);
+    const [uploadingRecords, setUploadingRecords] = useState(false);
+    const { token } = useContext(TokenContext);
     const { GetTodayPills, pills } = usePills();
+
+
+    // PARAR ALARMA
+    useEffect(() => {
+        async function getAlarms() {
+            const result = await ReactAlarm.getScheduledAlarms();
+            if (result.length !== 0) {
+                ReactAlarm.stopAlarmSound();
+            }
+        }
+
+        getAlarms();
+    }, [pillTaked])
 
     // ENVIAR NOTIFICACIÓN
     const pushNotification = async ({ pillName, pillHour }) => {
-        if (takeThePill == false) {
+        if (!takeThePill) {
             const alarmNotifData = {
                 title: `Debe tomar ${pillName} de las ${pillHour}`,
                 message: "Ya es hora de tomar su pastilla",
@@ -160,23 +178,10 @@ export default function Home({ navigation }) {
         }
     }
 
-    // PARAR ALARMA
-    useEffect(() => {
-        async function getAlarms () {
-            const result = await ReactAlarm.getScheduledAlarms();
-            if(result.length !== 0) {
-                ReactAlarm.stopAlarmSound();
-            } 
-        }
-
-        getAlarms();
-    }, [pillTaked])
-
     // VERIFICAR CADA X TIEMPO SI ES LA HORA DE LA PASTILLA
     const verifyPillHour = async (taskData) => {
         await new Promise(async () => {
             const { delay } = taskData;
-
 
             for (let i = 0; BackgroundJob.isRunning(); i++) {
                 let nextPillFormated = nextPillTime.pillHour.substring(1);
@@ -198,16 +203,14 @@ export default function Home({ navigation }) {
         });
     };
 
-
-
     // COMENZAR TAREAS EN SEGUNDO PLANO
     useEffect(() => {
         async function handleBackgroundJobs() {
             await BackgroundJob.start(verifyPillHour, notificationConfig);
         }
-
         handleBackgroundJobs();
     }, [])
+
 
     // ESTABLECER TODAS LAS PASTILLAS QUE SE VAN A MOSTRAR EN LA UI
     const callPills = async () => {
@@ -215,23 +218,19 @@ export default function Home({ navigation }) {
         setTodayPills(todayPillsResult.todayPills);
         setNextPill(todayPillsResult.nextPillComplete);
 
-        if (todayPillsResult.nextPillComplete != undefined)
+        if (todayPillsResult.nextPillComplete !== undefined) {
+            pillsRemaining = todayPillsResult.nextPillComplete.amount;
             nextPillTime = todayPillsResult.nextPillComplete;
+        }
 
-        setIsLoading(false);
     }
 
     useEffect(() => {
-        setIsLoading(true);
         callPills();
-    }, [pills, isFocused, changeReload])
+    }, [isFocused, pills, changeReload])
 
     const goToCreatePill = () => {
         navigation.navigate('NewPill')
-    }
-
-    const handleTakeThePill = () => {
-        takeThePill = false;
     }
 
 
@@ -263,54 +262,59 @@ export default function Home({ navigation }) {
     }, [])
 
 
+    const handleSubmitRecord = async (data) => {
+        try {
+            for (let i = 0; i < pillsRemaining; i++) {
+                await SubmitRecords(token, data);
+            }
+            setUploadingRecords(false);
+            alert('Registro guardado correctamente!');
+        } catch (error) {
+            alert('Error guardando el registro:', error);
+        }
+    }
 
 
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView scrollEnabled={true}>
                 <Text style={styles.title}>Próxima pastilla</Text>
-                {isLoading ?
-                    <View>
-                        <Text>Cargando...</Text>
-                    </View>
-                    :
-                    <View>
-                        {nextPill
-                            ? <View style={styles.nextPillContainer}>
-                                <Text style={styles.nextPillName}>{nextPill.pillName}</Text>
-                                <Text style={styles.nextPillHour}>{nextPill.pillHour}</Text>
-                            </View>
-                            :
-                            <View>
-                                <Text style={styles.notNextPills}>No hay una próxima pastilla</Text>
-                            </View>}
+                <View>
+                    {nextPill
+                        ? <View style={styles.nextPillContainer}>
+                            <Text style={styles.nextPillName}>{nextPill.pillName}</Text>
+                            <Text style={styles.nextPillHour}>{nextPill.pillHour}</Text>
+                        </View>
+                        :
+                        <View>
+                            <Text style={styles.notNextPills}>No hay una próxima pastilla</Text>
+                        </View>}
 
-                        {todayPills.length == 0
-                            ? <View>
-                                <Text>No hay pastillas aún</Text>
-                            </View>
-                            :
+                    {todayPills.length == 0
+                        ? <View>
+                            <Text>No hay pastillas aún</Text>
+                        </View>
+                        :
 
-                            <View style={{ marginTop: 30, display: 'flex', justifyContent: 'center' }}>
-                                <Text style={styles.todayPillsTitle}>Pastillas de hoy:</Text>
-                                <View style={styles.todayPillsContainer}>
-                                    {todayPills.map(pill => {
-                                        return (
-                                            <PillCard
-                                                pill={pill}
-                                                todayPills={todayPills}
-                                                setPills={setTodayPills}
-                                                key={pill._id}
-                                                setChangeReload={setChangeReload}
-                                                changeReload={changeReload}
-                                            />
-                                        )
-                                    })}
-                                </View>
+                        <View style={{ marginTop: 30, display: 'flex', justifyContent: 'center' }}>
+                            <Text style={styles.todayPillsTitle}>Pastillas de hoy:</Text>
+                            <View style={styles.todayPillsContainer}>
+                                {todayPills.map(pill => {
+                                    return (
+                                        <PillCard
+                                            pill={pill}
+                                            todayPills={todayPills}
+                                            setPills={setTodayPills}
+                                            key={pill._id}
+                                            setChangeReload={setChangeReload}
+                                            changeReload={changeReload}
+                                        />
+                                    )
+                                })}
                             </View>
-                        }
-                    </View>
-                }
+                        </View>
+                    }
+                </View>
                 <View style={styles.pillsButtons}>
                     <TouchableOpacity onPress={goToCreatePill} style={styles.newPillButton}>
                         <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Nueva pastilla</Text>
@@ -318,14 +322,32 @@ export default function Home({ navigation }) {
                     <Modal
                         animationType="slide"
                         transparent={true}
+                        visible={uploadingRecords}
+                    >
+                        <View style={styles.centeredView}>
+                            <View style={styles.modalView}>
+                                <Text style={styles.modalText}>Guardando registro... 👨‍💻👨‍💻</Text>
+                            </View>
+                        </View>
+                        <View style={styles.backgroundModal}></View>
+                    </Modal>
+                    <Modal
+                        animationType="slide"
+                        transparent={true}
                         visible={modalVisible}
                     >
                         <View style={styles.centeredView}>
                             <View style={styles.modalView}>
-                                <Text style={styles.modalText}>Debes tomar la pastilla {nextPillTime.pillName} de las {nextPillTime.pillHour}</Text>
+                                <Text style={styles.modalText}>Debes tomar la pastilla {nextPillTime.pillName} de las {nextPillTime.pillHour}.
+                                    Debe tomar {pillsRemaining} pastilla/s</Text>
                                 <Pressable
                                     style={[styles.button, styles.buttonClose]}
-                                    onPress={() => {pillTaked = true; setModalVisible(false)}}
+                                    onPress={() => {
+                                        handleSubmitRecord({ pillName: nextPillTime.pillName, amount: nextPillTime.amount, pillID: nextPillTime._id })
+                                        pillTaked = true;
+                                        setModalVisible(false);
+                                        setUploadingRecords(true)
+                                    }}
                                 >
                                     <Text style={styles.textStyle}>Ya la tomé!</Text>
                                 </Pressable>

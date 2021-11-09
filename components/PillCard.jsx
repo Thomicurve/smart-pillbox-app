@@ -5,7 +5,7 @@ import { DeletePills } from '../services/PillsServices';
 import TokenContext from '../context/TokenContext';
 
 
-export default function PillCard({ pill, setPills, todayPills, setChangeReload, changeReload }) {
+export default function PillCard({ pill, setPills, todayPills, changeReload, setChangeReload }) {
 
     const { token } = useContext(TokenContext);
 
@@ -24,7 +24,7 @@ export default function PillCard({ pill, setPills, todayPills, setChangeReload, 
             <Text style={styles.pillName}>{pill.pillName}</Text>
             <Text style={styles.pillHour}>{pill.pillHour}</Text>
             <Text style={styles.pillAmount}>{pill.takenToday} / {pill.amount}</Text>
-            <TouchableOpacity onPress={() => deletePills(pill._id)}><MaterialIcons name="delete" color="#fff" size={24} /></TouchableOpacity>
+            <TouchableOpacity style={{width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center'}} onPress={() => deletePills(pill._id)}><MaterialIcons name="delete" color="#fff" size={24} /></TouchableOpacity>
         </View>
     )
 }
