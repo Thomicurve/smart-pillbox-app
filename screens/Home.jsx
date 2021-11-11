@@ -186,10 +186,10 @@ export default function Home({ navigation }) {
             for (let i = 0; BackgroundJob.isRunning(); i++) {
                 let nextPillFormated;
                 let hourNow = moment().format('LT');
-                
+
                 if (nextPillTime.pillHour[0] == '0') nextPillFormated = nextPillTime.pillHour.substring(1);
                 else nextPillFormated = nextPillTime.pillHour;
-                
+
 
                 if (nextPillFormated === hourNow || takeThePill == true) {
                     pushNotification(nextPillTime);
@@ -340,11 +340,12 @@ export default function Home({ navigation }) {
                                 <Pressable
                                     style={[styles.button, styles.buttonClose]}
                                     onPress={() => {
-                                        handleSubmitRecord({ pillName: nextPillTime.pillName, 
-                                            amount: nextPillTime.amount, 
+                                        handleSubmitRecord({
+                                            pillName: nextPillTime.pillName,
+                                            amount: nextPillTime.amount,
                                             pillID: nextPillTime._id,
                                             pillHour: moment().format('LT'),
-                                            pillDate: moment().format('L')  
+                                            pillDate: moment().format('L')
                                         })
                                         pillTaked = true;
                                         setModalVisible(false);
@@ -360,6 +361,13 @@ export default function Home({ navigation }) {
 
                 </View>
                 <View>
+                    <TouchableOpacity
+                        style={styles.newPillButton}
+                        onPress={() => navigation.navigate('Records')}
+                    >
+                        <Text style={styles.textStyle}>Registros de pastillas</Text>
+                    </TouchableOpacity>
+
                     <TouchableOpacity
                         style={styles.newPillButton}
                         title="Mostrar potencia antena"
@@ -511,14 +519,13 @@ const styles = StyleSheet.create({
         marginRight: 'auto',
         marginBottom: 30,
         marginTop: 30,
-        // position: 'absolute',
-        // top: 100
     },
     newPillButton: {
         backgroundColor: "#1F547E",
         paddingHorizontal: 20,
         paddingVertical: 10,
         borderRadius: 20,
-        marginLeft: 40
+        marginLeft: 40,
+        marginVertical: 5
     }
 })

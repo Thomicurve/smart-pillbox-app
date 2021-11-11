@@ -11,6 +11,7 @@ import Welcome from './screens/Welcome';
 import Login from './screens/Login'
 import Home from './screens/Home'
 import NewPill from './screens/NewPill';
+import Records from './screens/Records';
 
 const Stack = createNativeStackNavigator();
 
@@ -58,6 +59,12 @@ export default function App() {
             <Stack.Screen
               name="NewPill"
               component={NewPill}
+              options={loggedNavOptions}
+            />
+
+            <Stack.Screen
+              name="Records"
+              component={Records}
               options={loggedNavOptions}
             />
 

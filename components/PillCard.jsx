@@ -24,7 +24,9 @@ export default function PillCard({ pill, setPills, todayPills, changeReload, set
             <Text style={styles.pillName}>{pill.pillName}</Text>
             <Text style={styles.pillHour}>{pill.pillHour}</Text>
             <Text style={styles.pillAmount}>{pill.takenToday} / {pill.amount}</Text>
-            <TouchableOpacity style={{width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center'}} onPress={() => deletePills(pill._id)}><MaterialIcons name="delete" color="#fff" size={24} /></TouchableOpacity>
+            <TouchableOpacity style={{width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center'}} onPress={() => deletePills(pill._id)}>
+                <MaterialIcons name="delete" color="#fff" size={24} />
+            </TouchableOpacity>
         </View>
     )
 }
