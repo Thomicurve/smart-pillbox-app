@@ -9,7 +9,7 @@ const apiLink = 'https://smart-pillbox-api.herokuapp.com';
 const usePills = () => {
     const { token } = useContext(TokenContext);
     const [thisDay] = useState(moment().format('dddd'));
-    
+
     const [pillsAndRecords, setPillsAndRecords] = useState({ pills: [], records: [] });
 
     const days = {
@@ -48,20 +48,17 @@ const usePills = () => {
     }, [token])
 
 
-    const getTodayRecords = (todayPills) => {
+    const getTodayRecords = (pill) => {
         let recordsRepeated = {};
-
-        for (let pill in todayPills) {
-            for (let record in pillsAndRecords.records) {
-                // VER SI COINCIDE EL ID DE LAS PASTILLAS DE HOY CON ALGUN REGISTRO DE HOY
-                if (todayPills[pill]._id == pillsAndRecords.records[record].pillID) {
-                    const pillID = pillsAndRecords.records[record].pillID;
-                    recordsRepeated[pillID] = {
-                        amount: !recordsRepeated[pillID] ? 1 : recordsRepeated[pillID].amount + 1
-                    }
+        pillsAndRecords.records.forEach(record => {
+            if(pill._id == record.pillID) {
+                const pillID = record.pillID;
+                recordsRepeated[pillID] = {
+                    amount: record.amount
                 }
             }
-        }
+        })
+        
         return recordsRepeated;
 
     }
@@ -74,7 +71,7 @@ const usePills = () => {
 
         let finalHourComplete = moment(hourChanged, 'h:mma');
 
-        if(moment(finalHourComplete).format('LT') === moment().format('LT')) return pill;
+        if (moment(finalHourComplete).format('LT') === moment().format('LT')) return pill;
         if (finalHourComplete.isAfter(moment()) == true) return pill;
         else return null
     }
@@ -88,10 +85,11 @@ const usePills = () => {
         const todayPills = pillsAndRecords.pills.filter(pill => pill.repeat.toString().split('').includes(days[thisDay]));
 
         // OBTENER LOS REGISTROS ASOCIADOS A ESA PASTILLA
-        const recordsRepeated = getTodayRecords(todayPills);
+        const recordsRepeated = todayPills.map(pill => getTodayRecords(pill));
         todayPills.forEach(({ _id }, index) => {
-            todayPills[index] = { ...todayPills[index], takenToday: !recordsRepeated[_id] ? 0 : recordsRepeated[_id].amount };
+            todayPills[index] = { ...todayPills[index], takenToday: !recordsRepeated[index][_id] ? 0 : recordsRepeated[index][_id].amount };
         });
+
 
         // 2DO FILTRO: OBTENER LAS PASTILLAS RESTNTES
         let pillsRemainingResult = todayPills.map(pill => {

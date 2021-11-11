@@ -35,7 +35,7 @@ const notificationConfig = {
 };
 
 const Delay = (time) => new Promise((resolve) => setTimeout(() => resolve(), time));
-let nextPillTime = { pillName: '', pillHour: '' };
+let nextPillTime = { pillName: '', amount: 0, pillID: '', _id: '', pillHour: '' };
 let takeThePill = false;
 let pillTaked = false;
 let pillsRemaining = 0;
@@ -184,20 +184,18 @@ export default function Home({ navigation }) {
             const { delay } = taskData;
 
             for (let i = 0; BackgroundJob.isRunning(); i++) {
-                let nextPillFormated = nextPillTime.pillHour.substring(1);
+                let nextPillFormated;
                 let hourNow = moment().format('LT');
-                if (nextPillTime.pillHour[0] == '0') {
-                    if (nextPillFormated == hourNow || takeThePill == true) {
-                        pushNotification(nextPillTime);
-                        takeThePill = true;
-                    }
+                
+                if (nextPillTime.pillHour[0] == '0') nextPillFormated = nextPillTime.pillHour.substring(1);
+                else nextPillFormated = nextPillTime.pillHour;
+                
 
-                } else {
-                    if (hourNow == nextPillFormated || takeThePill == true) {
-                        pushNotification(nextPillTime);
-                        takeThePill = true;
-                    }
+                if (nextPillFormated === hourNow || takeThePill == true) {
+                    pushNotification(nextPillTime);
+                    takeThePill = true;
                 }
+
                 await Delay(delay);
             }
         });
@@ -264,11 +262,10 @@ export default function Home({ navigation }) {
 
     const handleSubmitRecord = async (data) => {
         try {
-            for (let i = 0; i < pillsRemaining; i++) {
-                await SubmitRecords(token, data);
-            }
+            await SubmitRecords(token, data);
             setUploadingRecords(false);
             alert('Registro guardado correctamente!');
+
         } catch (error) {
             alert('Error guardando el registro:', error);
         }
@@ -343,7 +340,12 @@ export default function Home({ navigation }) {
                                 <Pressable
                                     style={[styles.button, styles.buttonClose]}
                                     onPress={() => {
-                                        handleSubmitRecord({ pillName: nextPillTime.pillName, amount: nextPillTime.amount, pillID: nextPillTime._id })
+                                        handleSubmitRecord({ pillName: nextPillTime.pillName, 
+                                            amount: nextPillTime.amount, 
+                                            pillID: nextPillTime._id,
+                                            pillHour: moment().format('LT'),
+                                            pillDate: moment().format('L')  
+                                        })
                                         pillTaked = true;
                                         setModalVisible(false);
                                         setUploadingRecords(true)
