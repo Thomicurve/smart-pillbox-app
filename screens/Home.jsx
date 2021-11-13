@@ -30,7 +30,7 @@ const notificationConfig = {
     },
     color: '#072F4E',
     parameters: {
-        delay: 3000,
+        delay: 8000,
     },
 };
 
@@ -148,9 +148,10 @@ export default function Home({ navigation }) {
     const [nextPill, setNextPill] = useState({ pillName: '', pillHour: '', amount: 0 });
     const [modalVisible, setModalVisible] = useState(false);
     const [uploadingRecords, setUploadingRecords] = useState(false);
+    const [schedulePills, setChedulePills] = useState([]);
     const { token } = useContext(TokenContext);
     const { GetTodayPills, pills } = usePills();
-
+    const [nextPills, setNextPills] = useState([]);
 
     // PARAR ALARMA
     useEffect(() => {
@@ -165,18 +166,34 @@ export default function Home({ navigation }) {
     }, [pillTaked])
 
     // ENVIAR NOTIFICACIÓN
-    const pushNotification = async ({ pillName, pillHour }) => {
+    const pushNotification = async (pillToNotificate) => {
+
         if (!takeThePill) {
-            const alarmNotifData = {
-                title: `Debe tomar ${pillName} de las ${pillHour}`,
-                message: "Ya es hora de tomar su pastilla",
-                channel: "my_channel_id",
-                small_icon: "ic_launcher",
-            };
-            setModalVisible(true);
-            ReactAlarm.sendNotification(alarmNotifData);
+            if (pillToNotificate[0]) {
+                pillToNotificate.forEach((pill) => {
+                    const alarmNotifData = {
+                        title: `Debe tomar ${pill.pillName} de las ${pill.pillHour}`,
+                        message: "Ya es hora de tomar su pastilla",
+                        channel: "my_channel_id",
+                        small_icon: "ic_launcher",
+                    };
+                    setModalVisible(true);
+                    ReactAlarm.sendNotification(alarmNotifData);
+                })
+            } else {
+                const alarmNotifData = {
+                    title: `Debe tomar ${pillToNotificate.pillName} de las ${pillToNotificate.pillHour}`,
+                    message: "Ya es hora de tomar su pastilla",
+                    channel: "my_channel_id",
+                    small_icon: "ic_launcher",
+                };
+                setModalVisible(true);
+                ReactAlarm.sendNotification(alarmNotifData);
+            }
         }
+
     }
+
 
     // VERIFICAR CADA X TIEMPO SI ES LA HORA DE LA PASTILLA
     const verifyPillHour = async (taskData) => {
@@ -184,17 +201,30 @@ export default function Home({ navigation }) {
             const { delay } = taskData;
 
             for (let i = 0; BackgroundJob.isRunning(); i++) {
-                let nextPillFormated;
                 let hourNow = moment().format('LT');
 
-                if (nextPillTime.pillHour[0] == '0') nextPillFormated = nextPillTime.pillHour.substring(1);
-                else nextPillFormated = nextPillTime.pillHour;
+                if (!nextPillTime) return await Delay(delay);
+                if (!nextPills.length) return await Delay(delay);
 
-
-                if (nextPillFormated === hourNow || takeThePill == true) {
-                    pushNotification(nextPillTime);
-                    takeThePill = true;
-                }
+                
+                nextPills.forEach(pill => {
+                    let formatedPill = '';
+                    if(pill.pillHour[0] === '0') formatedPill = pill.pillHour.substring(1);
+                    else formatedPill = pill.pillHour;
+                    
+                    if(formatedPill === hourNow) {
+                        console.log(pill)
+                    }
+                })
+                console.log('***********')
+                // if (schedulePills && schedulePills[0].pillHour == hourNow || takeThePill) {
+                //     console.log('hola?')
+                //     pushNotification(schedulePills)
+                // }
+                // if (nextPillFormated === hourNow || takeThePill == true && !schedulePills) {
+                //     pushNotification(nextPillTime);
+                //     takeThePill = true;
+                // }
 
                 await Delay(delay);
             }
@@ -211,14 +241,20 @@ export default function Home({ navigation }) {
 
 
     // ESTABLECER TODAS LAS PASTILLAS QUE SE VAN A MOSTRAR EN LA UI
+
     const callPills = async () => {
         const todayPillsResult = await GetTodayPills();
         setTodayPills(todayPillsResult.todayPills);
-        setNextPill(todayPillsResult.nextPillComplete);
 
-        if (todayPillsResult.nextPillComplete !== undefined) {
+
+        if (todayPillsResult.nextPillComplete.length) {
+            setNextPill(todayPillsResult.nextPillComplete[0]);
             pillsRemaining = todayPillsResult.nextPillComplete.amount;
-            nextPillTime = todayPillsResult.nextPillComplete;
+            nextPillTime = todayPillsResult.nextPillComplete[0];
+            setNextPills(todayPillsResult.nextPillComplete);
+        } else {
+            setNextPill(undefined);
+            setNextPills([]);
         }
 
     }
@@ -260,6 +296,7 @@ export default function Home({ navigation }) {
     }, [])
 
 
+    // SUBIR LOS REGISTROS
     const handleSubmitRecord = async (data) => {
         try {
             await SubmitRecords(token, data);
@@ -347,6 +384,7 @@ export default function Home({ navigation }) {
                                             pillHour: moment().format('LT'),
                                             pillDate: moment().format('L')
                                         })
+                                        // takeThePill = false;
                                         pillTaked = true;
                                         setModalVisible(false);
                                         setUploadingRecords(true)

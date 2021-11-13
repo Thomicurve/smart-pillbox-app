@@ -45,13 +45,4 @@ const DeletePills = async (token, pillID) => {
     }
 }
 
-const GetRecords = async ( token ) => {
-    try {
-        const {data} = await axios.get(`${apiLink}/records`, {headers: {"x-access-token": token}});
-        return data.records;
-    } catch(err) {
-        return alert(err)
-    }
-}
-
-export {GetPills, GetRecords, UploadPills, DeletePills};
+export {GetPills, UploadPills, DeletePills};

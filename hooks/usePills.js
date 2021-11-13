@@ -114,13 +114,15 @@ const usePills = () => {
         })
 
         if (nextPillAM.length != 0) nextPill = nextPillAM;
-        nextPill = nextPill.sort().shift();
+        nextPill = nextPill.sort();
 
         //Obtener todos los datos de la pastilla filtrada
-        let nextPillComplete = pillsRemainingResult.filter(({ pillHour }) => pillHour.includes(nextPill));
-
-        nextPillComplete = nextPillComplete[0];
-
+        let nextPillComplete = pillsRemainingResult.map((pillRemaining, index) => {
+            if(pillRemaining.pillHour == nextPill[index]){
+                return pillRemaining;
+            }
+        })
+        
         return { pillsRemainingResult, nextPillComplete, todayPills };
     }
 

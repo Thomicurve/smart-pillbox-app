@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native'
 import TokenContext from '../context/TokenContext';
 
 
-export default function RecordCard() {
+export default function RecordCard({pillHour, pillName, amount, pillDate}) {
 
     const { token } = useContext(TokenContext);
 
@@ -11,9 +11,10 @@ export default function RecordCard() {
 
     return (
         <View style={styles.pillCard}>
-            <Text style={styles.pillName}>Ibuprofeno</Text>
-            <Text style={styles.pillHour}>11/11/2021</Text>
-            <Text style={styles.pillAmount}>2</Text>
+            <Text style={styles.pillName}>{pillName}</Text>
+            <Text style={styles.pillHour}>{pillDate}</Text>
+            <Text style={styles.pillAmount}>{pillHour}</Text>
+            <Text style={styles.pillAmount}>{amount}</Text>
         </View>
     )
 }

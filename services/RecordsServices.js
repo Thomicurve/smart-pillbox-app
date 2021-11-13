@@ -15,9 +15,25 @@ const SubmitRecords = async (token, dataObj) => {
 
         return data;
 
-    } catch(err) {{
+    } catch(err) {
         return alert(err);
-    }}
+    }
 }
 
-export {SubmitRecords};
+const GetRecords = async (token) => {
+    try {
+        const {data} = await axios({
+            method: 'GET',
+            url: `${apiLink}/records`,
+            headers: {
+                "x-access-token": token
+            }
+        })
+        return data.records;
+
+    } catch (err) {
+        return alert(err);
+    }
+}
+
+export { SubmitRecords, GetRecords };
