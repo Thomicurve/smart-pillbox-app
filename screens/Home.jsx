@@ -1,51 +1,58 @@
-import React, { useState, useEffect } from 'react'
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Button } from 'react-native'
+import React, { useState, useEffect, useContext } from 'react'
+import TokenContext from '../context/TokenContext';
+import {
+    View, Text, StyleSheet, ScrollView,
+    TouchableOpacity, SafeAreaView, Pressable, Modal, Switch
+} from 'react-native'
 import { useIsFocused } from '@react-navigation/native';
 import BackgroundJob from 'react-native-background-actions';
 import moment from 'moment';
+import ReactAlarm from 'react-native-alarm-notification';
 
 //imports Alan
 import BleManager from 'react-native-ble-manager';
 import { stringToBytes } from "convert-string";
 //imports Alan - end
 
-import ReactAlarm from 'react-native-alarm-notification';
-// const fireDate = ReactAlarm.parseDate(new Date(Date.now() + 1000));
-
 
 import usePills from '../hooks/usePills';
+import { SubmitRecords } from '../services/RecordsServices'
 import PillCard from '../components/PillCard';
 
 
 const notificationConfig = {
-    taskName: 'Example',
-    taskTitle: 'Corriendo...🔍',
-    taskDesc: 'Analizando pastillas',
+    taskName: 'SmartPillbox',
+    taskTitle: 'Smart Pillbox 💊',
+    taskDesc: '🔍 Sincronizando pastillas...',
     taskIcon: {
         name: 'ic_launcher',
         type: 'mipmap',
     },
     color: '#072F4E',
     parameters: {
-        delay: 5000,
+        delay: 3000,
     },
 };
 
-const makeDelay = (time) => new Promise((resolve) => setTimeout(() => resolve(), time));
-let nextPillTime = { pillName: '', pillHour: '' };
+const Delay = (time) => new Promise((resolve) => setTimeout(() => resolve(), time));
+let nextPillTime = { pillName: '', amount: 0, pillID: '', _id: '', pillHour: '' };
 let takeThePill = false;
+let pillTaked = false;
+let pillsRemaining = 0;
+
+//variables Alan
+let btCelular = false; //bt celular esta enacendido?
+let btConectado = false; //bt celular y arduino estan contactados?
+const ID_HM10 = '50:33:8B:13:5D:01'; //ID del bluetooth del arduino
+let boolFindSmartPillbox = false; //bool determina si se busca o no el pastillero
+//variables Alan - end
 
 export default function Home({ navigation }) {
 
 
     //variables Alan
-    let btCelular = false; //bt celular esta enacendido?
-    let btConectado = false; //bt celular y arduino estan contactados?
-    const ID_HM10 = '50:33:8B:13:5D:01'; //ID del bluetooth del arduino
-
-    function delay(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
+    const [isEnabled, setIsEnabled] = useState(false); //switch state
+    const toggleSwitch = () => setIsEnabled(previousState => !previousState); //switch state
 
     //1- Funcion Comprobar si el bluetooth del celular esta encendido y permitido
     async function checkBT_device() {
@@ -56,17 +63,17 @@ export default function Home({ navigation }) {
             })
             .catch((error) => {
                 btCelular = false;
-                console.error("El usuario no permite activar el bluetooth");
+                console.info("El usuario no permite activar el bluetooth");
                 console.error(error);
             });
     }
 
     //2- Funcion escanear dispositivos en 3seg
     async function scanDevices() {
-        await BleManager.scan([], 3, true).then(() => {
+        await BleManager.scan([], 3, false).then(() => {
             console.info("Empezando escaneo...");
         });
-        await delay(3000); //esperar 3 segundos
+        await Delay(3000); //esperar 3 segundos
         await BleManager.stopScan().then(() => { //Detener el escaneo
             console.log("Scan stopped");
         });
@@ -78,16 +85,18 @@ export default function Home({ navigation }) {
             .then(async () => {
                 // Success code
                 console.log("Connected");
-                await BleManager.retrieveServices(ID_HM10).then(
-                    (peripheralInfo) => {
-                        // Success code
-                        // console.log("Peripheral info:", peripheralInfo);
-                    }
-                );
+                await BleManager.retrieveServices(ID_HM10)
+                // .then(
+                //     (peripheralInfo) => {
+                //         // Success code
+                //         // console.log("Peripheral info:", peripheralInfo);
+                //     }
+                // );
             })
             .catch((error) => {
                 // Failure code
                 console.error(error);
+                btConectado = false;
             });
     }
 
@@ -103,95 +112,117 @@ export default function Home({ navigation }) {
                 setInterval(apagar, 300);
             } else {
                 console.log("Peripheral is NOT connected!");
+                btConectado = false;
             }
         });
     }
 
     // Funcion Apagar BUZZER
     async function apagar() {
-        const data = stringToBytes('0');
-        await BleManager.write(
-            ID_HM10,
-            "0000ffe0-0000-1000-8000-00805f9b34fb",
-            "0000ffe1-0000-1000-8000-00805f9b34fb",
-            data
-        )
-            .then(() => {
-                // Success code
-                // console.log("Write: " + data);
-            })
-            .catch((error) => {
-                console.error(error);
-                // NOTIFIACION CELULAR DE PASTILLERO DESCONECTADO AQUI
-            });
+        if (!boolFindSmartPillbox) { //Si no se busca el pastillero enviar 0 para que no suene el pastillero
+            const data = stringToBytes('0');
+            await BleManager.write(
+                ID_HM10,
+                "0000ffe0-0000-1000-8000-00805f9b34fb",
+                "0000ffe1-0000-1000-8000-00805f9b34fb",
+                data
+            )
+                // .then(() => {
+                //     // Success code
+                //     console.log("Write: " + data);
+                // })
+                .catch((error) => {
+                    console.error(error);
+                    btConectado = false;
+                    // NOTIFIACION CELULAR DE PASTILLERO DESCONECTADO AQUI
+                });
+        } else {
+            return; //No enviar nada para que el pastillero suene
+        }
     }
 
-    //Funcion mostrar RSSI señal
-    async function showRSSI() {
-        await BleManager.readRSSI(ID_HM10)
-            .then((rssi) => {
-                // Success code
-                console.log("Current RSSI: " + rssi);
-            })
-            .catch((error) => {
-                // Failure code
-                console.error(error);
-            });
+    function findSmartPillbox(isEnabled) {
+        if (!isEnabled) { //switch no activado
+            boolFindSmartPillbox = false; //No se buscara el pastillero
+        } else { //switch activado
+            if (!btConectado) { //antes verificar que el celular y pastillero esten contectados
+                console.log("El celular y pastillero deben estar conectados!");
+                return;
+            }else{
+                boolFindSmartPillbox = true; //Si se se buscara el pastillero
+            }
+        }
     }
     //variables Alan - end
 
     const isFocused = useIsFocused();
+
     const [changeReload, setChangeReload] = useState(false);
     const [todayPills, setTodayPills] = useState([]);
-    const [nextPill, setNextPill] = useState({ pillName: '', pillHour: '' });
-    const [isLoading, setIsLoading] = useState(true);
+    const [nextPill, setNextPill] = useState({ pillName: '', pillHour: '', amount: 0 });
+    const [modalVisible, setModalVisible] = useState(false);
+    const [uploadingRecords, setUploadingRecords] = useState(false);
+    const { token } = useContext(TokenContext);
     const { GetTodayPills, pills } = usePills();
 
+
+    // PARAR ALARMA
+    useEffect(() => {
+        async function getAlarms() {
+            const result = await ReactAlarm.getScheduledAlarms();
+            if (result.length !== 0) {
+                ReactAlarm.stopAlarmSound();
+            }
+        }
+
+        getAlarms();
+    }, [pillTaked])
+
+    // ENVIAR NOTIFICACIÓN
     const pushNotification = async ({ pillName, pillHour }) => {
-        const alarmNotifData = {
-            title: `Debe tomar ${pillName} de las ${pillHour}`,
-            message: "Ya es hora de tomar su pastilla",
-            channel: "my_channel_id",
-            small_icon: "ic_launcher",
-        };
-        ReactAlarm.sendNotification(alarmNotifData);
+        if (!takeThePill) {
+            const alarmNotifData = {
+                title: `Debe tomar ${pillName} de las ${pillHour}`,
+                message: "Ya es hora de tomar su pastilla",
+                channel: "my_channel_id",
+                small_icon: "ic_launcher",
+            };
+            setModalVisible(true);
+            ReactAlarm.sendNotification(alarmNotifData);
+        }
     }
 
-    // 
+    // VERIFICAR CADA X TIEMPO SI ES LA HORA DE LA PASTILLA
     const verifyPillHour = async (taskData) => {
         await new Promise(async () => {
             const { delay } = taskData;
-            let hourNow = moment().format('LT');
 
             for (let i = 0; BackgroundJob.isRunning(); i++) {
-                let nextPillFormated = nextPillTime.pillHour.substring(1);
-                if (nextPillTime.pillHour[0] == '0') {
-                    if (nextPillFormated == moment().format('LT') || takeThePill == true) {
-                        takeThePill = true;
-                        pushNotification(nextPillTime);
-                    }
+                let nextPillFormated;
+                let hourNow = moment().format('LT');
 
-                } else {
-                    if (hourNow == nextPillTime.pillHour) {
-                        pushNotification(nextPillTime);
-                    }
+                if (nextPillTime.pillHour[0] == '0') nextPillFormated = nextPillTime.pillHour.substring(1);
+                else nextPillFormated = nextPillTime.pillHour;
+
+
+                if (nextPillFormated === hourNow || takeThePill == true) {
+                    pushNotification(nextPillTime);
+                    takeThePill = true;
                 }
-                await makeDelay(delay);
+
+                await Delay(delay);
             }
         });
     };
 
-
-
-
+    // COMENZAR TAREAS EN SEGUNDO PLANO
     useEffect(() => {
         async function handleBackgroundJobs() {
             await BackgroundJob.start(verifyPillHour, notificationConfig);
-            console.log('Start tasks')
         }
-
         handleBackgroundJobs();
     }, [])
+
 
     // ESTABLECER TODAS LAS PASTILLAS QUE SE VAN A MOSTRAR EN LA UI
     const callPills = async () => {
@@ -199,26 +230,23 @@ export default function Home({ navigation }) {
         setTodayPills(todayPillsResult.todayPills);
         setNextPill(todayPillsResult.nextPillComplete);
 
-        if (todayPillsResult.nextPillComplete != undefined)
+        if (todayPillsResult.nextPillComplete !== undefined) {
+            pillsRemaining = todayPillsResult.nextPillComplete.amount;
             nextPillTime = todayPillsResult.nextPillComplete;
+        }
 
-        setIsLoading(false);
     }
 
     useEffect(() => {
-        setIsLoading(true);
         callPills();
-    }, [pills, isFocused, changeReload])
+    }, [isFocused, pills, changeReload])
 
     const goToCreatePill = () => {
         navigation.navigate('NewPill')
     }
 
-    const handleTakeThePill = () => {
-        takeThePill = false;
-    }
 
-
+    // useEffect Alan
     useEffect(() => {
 
         async function bluetooth() {
@@ -231,12 +259,13 @@ export default function Home({ navigation }) {
                 await scanDevices();
                 await conectar();
                 await checkArduino_Connected();
-                if (btConectado) {
-                } else {
-                    console.error("No se pudo conectar con el arduino");
+                if (!btConectado) {
+                    console.error("No se puedo conectar con el pastillero");
+                    btConectado = false;
                 }
             } else {
                 console.error("El bluetooth no esta encendido");
+                btConectado = false;
             }
 
 
@@ -247,66 +276,123 @@ export default function Home({ navigation }) {
     }, [])
 
 
+    const handleSubmitRecord = async (data) => {
+        try {
+            await SubmitRecords(token, data);
+            setUploadingRecords(false);
+            alert('Registro guardado correctamente!');
 
+        } catch (error) {
+            alert('Error guardando el registro:', error);
+        }
+    }
 
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView scrollEnabled={true}>
                 <Text style={styles.title}>Próxima pastilla</Text>
-                {isLoading ?
-                    <View>
-                        <Text>Cargando...</Text>
-                    </View>
-                    :
-                    <View>
-                        {nextPill
-                            ? <View style={styles.nextPillContainer}>
-                                <Text style={styles.nextPillName}>{nextPill.pillName}</Text>
-                                <Text style={styles.nextPillHour}>{nextPill.pillHour}</Text>
-                            </View>
-                            :
-                            <View>
-                                <Text style={styles.notNextPills}>No hay una próxima pastilla</Text>
-                            </View>}
+                <View>
+                    {nextPill
+                        ? <View style={styles.nextPillContainer}>
+                            <Text style={styles.nextPillName}>{nextPill.pillName}</Text>
+                            <Text style={styles.nextPillHour}>{nextPill.pillHour}</Text>
+                        </View>
+                        :
+                        <View>
+                            <Text style={styles.notNextPills}>No hay una próxima pastilla</Text>
+                        </View>}
 
-                        {todayPills.length == 0
-                            ? <View>
-                                <Text>No hay pastillas aún</Text>
-                            </View>
-                            :
+                    {todayPills.length == 0
+                        ? <View>
+                            <Text>No hay pastillas aún</Text>
+                        </View>
+                        :
 
-                            <View style={{ marginTop: 30, display: 'flex', justifyContent: 'center' }}>
-                                <Text style={styles.todayPillsTitle}>Pastillas de hoy:</Text>
-                                <View style={styles.todayPillsContainer}>
-                                    {todayPills.map(pill => {
-                                        return (
-                                            <PillCard
-                                                pill={pill}
-                                                todayPills={todayPills}
-                                                setPills={setTodayPills}
-                                                key={pill._id}
-                                                setChangeReload={setChangeReload}
-                                                changeReload={changeReload}
-                                            />
-                                        )
-                                    })}
-                                </View>
+                        <View style={{ marginTop: 30, display: 'flex', justifyContent: 'center' }}>
+                            <Text style={styles.todayPillsTitle}>Pastillas de hoy:</Text>
+                            <View style={styles.todayPillsContainer}>
+                                {todayPills.map(pill => {
+                                    return (
+                                        <PillCard
+                                            pill={pill}
+                                            todayPills={todayPills}
+                                            setPills={setTodayPills}
+                                            key={pill._id}
+                                            setChangeReload={setChangeReload}
+                                            changeReload={changeReload}
+                                        />
+                                    )
+                                })}
                             </View>
-                        }
-                    </View>
-                }
+                        </View>
+                    }
+                </View>
                 <View style={styles.pillsButtons}>
                     <TouchableOpacity onPress={goToCreatePill} style={styles.newPillButton}>
                         <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Nueva pastilla</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={handleTakeThePill} style={styles.newPillButton}>
-                        <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Listo!</Text>
-                    </TouchableOpacity>
+                    <Modal
+                        animationType="slide"
+                        transparent={true}
+                        visible={uploadingRecords}
+                    >
+                        <View style={styles.centeredView}>
+                            <View style={styles.modalView}>
+                                <Text style={styles.modalText}>Guardando registro... 👨‍💻👨‍💻</Text>
+                            </View>
+                        </View>
+                        <View style={styles.backgroundModal}></View>
+                    </Modal>
+                    <Modal
+                        animationType="slide"
+                        transparent={true}
+                        visible={modalVisible}
+                    >
+                        <View style={styles.centeredView}>
+                            <View style={styles.modalView}>
+                                <Text style={styles.modalText}>Debes tomar la pastilla {nextPillTime.pillName} de las {nextPillTime.pillHour}.
+                                    Debe tomar {pillsRemaining} pastilla/s</Text>
+                                <Pressable
+                                    style={[styles.button, styles.buttonClose]}
+                                    onPress={() => {
+                                        handleSubmitRecord({
+                                            pillName: nextPillTime.pillName,
+                                            amount: nextPillTime.amount,
+                                            pillID: nextPillTime._id,
+                                            pillHour: moment().format('LT'),
+                                            pillDate: moment().format('L')
+                                        })
+                                        pillTaked = true;
+                                        setModalVisible(false);
+                                        setUploadingRecords(true)
+                                    }}
+                                >
+                                    <Text style={styles.textStyle}>Ya la tomé!</Text>
+                                </Pressable>
+                            </View>
+                        </View>
+                        <View style={styles.backgroundModal}></View>
+                    </Modal>
+
                 </View>
                 <View>
-                    <Button
-                        title="Mostrar potencia antena"
-                        onPress={() => showRSSI()}
+                    <TouchableOpacity
+                        style={styles.newPillButton}
+                        onPress={() => navigation.navigate('Records')}
+                    >
+                        <Text style={styles.textStyle}>Registros de pastillas</Text>
+                    </TouchableOpacity>
+                </View>
+                {/* Switch para hacer sonar el buzzer*/}
+                <View style={styles.centeredView}>
+                    <Text style={styles.title}>{isEnabled ? "Switch is ON" : "Switch is OFF"}</Text>
+                    <Switch
+                        trackColor={{ false: "#767577", true: "#49d864" }}
+                        thumbColor={isEnabled ? "#f4f3f4" : "#f4f3f4"}
+                        ios_backgroundColor="#3e3e3e"
+                        onValueChange={toggleSwitch}
+                        onChange={isEnabled ? findSmartPillbox(isEnabled) : findSmartPillbox(isEnabled)}
+                        value={isEnabled}
                     />
                 </View>
             </ScrollView>
@@ -315,6 +401,59 @@ export default function Home({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+    backgroundModal: {
+        position: 'absolute',
+        backgroundColor: '#000',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        opacity: 0.9,
+        zIndex: 0
+    },
+    centeredView: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        marginTop: 22,
+        position: 'relative',
+        zIndex: 1
+    },
+    modalView: {
+        margin: 20,
+        backgroundColor: "white",
+        borderRadius: 20,
+        padding: 35,
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5
+    },
+    button: {
+        borderRadius: 20,
+        padding: 10,
+        elevation: 2
+    },
+    buttonOpen: {
+        backgroundColor: "#F194FF",
+    },
+    buttonClose: {
+        backgroundColor: "#2196F3",
+    },
+    textStyle: {
+        color: "white",
+        fontWeight: "bold",
+        textAlign: "center"
+    },
+    modalText: {
+        marginBottom: 15,
+        textAlign: "center"
+    },
     container: {
         backgroundColor: '#072F4E',
         flex: 1,
@@ -399,14 +538,13 @@ const styles = StyleSheet.create({
         marginRight: 'auto',
         marginBottom: 30,
         marginTop: 30,
-        // position: 'absolute',
-        // top: 100
     },
     newPillButton: {
         backgroundColor: "#1F547E",
         paddingHorizontal: 20,
         paddingVertical: 10,
         borderRadius: 20,
-        marginLeft: 40
+        marginLeft: 40,
+        marginVertical: 5
     }
 })
