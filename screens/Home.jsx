@@ -30,15 +30,17 @@ const notificationConfig = {
     },
     color: '#072F4E',
     parameters: {
-        delay: 8000,
+        delay: 10000,
     },
 };
 
 const Delay = (time) => new Promise((resolve) => setTimeout(() => resolve(), time));
-let nextPillTime = { pillName: '', amount: 0, pillID: '', _id: '', pillHour: '' };
+let nextPillTime = { pillName: '', amount: 0, pillID: '', _id: '', pillHour: '', takenToday: 0 };
 let takeThePill = false;
-let pillTaked = false;
+let pillTaken = false;
 let pillsRemaining = 0;
+let nextPills = [];
+let haveToTake = true;
 
 export default function Home({ navigation }) {
 
@@ -145,13 +147,11 @@ export default function Home({ navigation }) {
 
     const [changeReload, setChangeReload] = useState(false);
     const [todayPills, setTodayPills] = useState([]);
-    const [nextPill, setNextPill] = useState({ pillName: '', pillHour: '', amount: 0 });
+    const [nextPill, setNextPill] = useState({ pillName: '', pillHour: '', amount: 0, takenToday: 0 });
     const [modalVisible, setModalVisible] = useState(false);
     const [uploadingRecords, setUploadingRecords] = useState(false);
-    const [schedulePills, setChedulePills] = useState([]);
     const { token } = useContext(TokenContext);
     const { GetTodayPills, pills } = usePills();
-    const [nextPills, setNextPills] = useState([]);
 
     // PARAR ALARMA
     useEffect(() => {
@@ -163,34 +163,23 @@ export default function Home({ navigation }) {
         }
 
         getAlarms();
-    }, [pillTaked])
+    }, [pillTaken])
 
     // ENVIAR NOTIFICACIÓN
-    const pushNotification = async (pillToNotificate) => {
+    const pushNotification = async (pill) => {
 
-        if (!takeThePill) {
-            if (pillToNotificate[0]) {
-                pillToNotificate.forEach((pill) => {
-                    const alarmNotifData = {
-                        title: `Debe tomar ${pill.pillName} de las ${pill.pillHour}`,
-                        message: "Ya es hora de tomar su pastilla",
-                        channel: "my_channel_id",
-                        small_icon: "ic_launcher",
-                    };
-                    setModalVisible(true);
-                    ReactAlarm.sendNotification(alarmNotifData);
-                })
-            } else {
-                const alarmNotifData = {
-                    title: `Debe tomar ${pillToNotificate.pillName} de las ${pillToNotificate.pillHour}`,
-                    message: "Ya es hora de tomar su pastilla",
-                    channel: "my_channel_id",
-                    small_icon: "ic_launcher",
-                };
-                setModalVisible(true);
-                ReactAlarm.sendNotification(alarmNotifData);
-            }
-        }
+        // if (pill.takenToday === 0) {
+            const alarmNotifData = {
+                title: `Debe tomar ${pill.pillName} de las ${pill.pillHour}`,
+                message: "Ya es hora de tomar su pastilla",
+                channel: "my_channel_id",
+                small_icon: "ic_launcher",
+            };
+
+            setModalVisible(true);
+            ReactAlarm.sendNotification(alarmNotifData);
+        // }
+
 
     }
 
@@ -203,28 +192,17 @@ export default function Home({ navigation }) {
             for (let i = 0; BackgroundJob.isRunning(); i++) {
                 let hourNow = moment().format('LT');
 
-                if (!nextPillTime) return await Delay(delay);
-                if (!nextPills.length) return await Delay(delay);
+                if (nextPillTime !== null) {
+                    if (nextPillTime.takenToday === 0) {
+                        let formatedPill = '';
+                        // console.log(nextPillTime)
+                        if (nextPillTime.pillHour[0] === '0') formatedPill = nextPillTime.pillHour.substring(1);
+                        else formatedPill = nextPillTime.pillHour;
 
-                
-                nextPills.forEach(pill => {
-                    let formatedPill = '';
-                    if(pill.pillHour[0] === '0') formatedPill = pill.pillHour.substring(1);
-                    else formatedPill = pill.pillHour;
-                    
-                    if(formatedPill === hourNow) {
-                        console.log(pill)
+                        if (formatedPill === hourNow) pushNotification(nextPillTime);
                     }
-                })
-                console.log('***********')
-                // if (schedulePills && schedulePills[0].pillHour == hourNow || takeThePill) {
-                //     console.log('hola?')
-                //     pushNotification(schedulePills)
-                // }
-                // if (nextPillFormated === hourNow || takeThePill == true && !schedulePills) {
-                //     pushNotification(nextPillTime);
-                //     takeThePill = true;
-                // }
+                }
+
 
                 await Delay(delay);
             }
@@ -241,20 +219,28 @@ export default function Home({ navigation }) {
 
 
     // ESTABLECER TODAS LAS PASTILLAS QUE SE VAN A MOSTRAR EN LA UI
-
     const callPills = async () => {
         const todayPillsResult = await GetTodayPills();
         setTodayPills(todayPillsResult.todayPills);
 
-
-        if (todayPillsResult.nextPillComplete.length) {
-            setNextPill(todayPillsResult.nextPillComplete[0]);
-            pillsRemaining = todayPillsResult.nextPillComplete.amount;
-            nextPillTime = todayPillsResult.nextPillComplete[0];
-            setNextPills(todayPillsResult.nextPillComplete);
+        if (todayPillsResult.nextPillComplete.length !== 0) {
+            // setNextPill(todayPillsResult.nextPillComplete[0]);
+            let pillFiltered = todayPillsResult.nextPillComplete.filter(({ takenToday }) => takenToday == 0);
+            console.log(pillFiltered)
+            if (pillFiltered.length !== 0) {
+                setNextPill(pillFiltered[0]);
+                pillsRemaining = pillFiltered[0].amount;
+                // nextPills = todayPillsResult.nextPillComplete;
+                nextPillTime = pillFiltered[0];
+            } else {
+                nextPillTime = null;
+            }
+            // pillsRemaining = todayPillsResult.nextPillComplete.amount;
+            // nextPills = todayPillsResult.nextPillComplete;
         } else {
             setNextPill(undefined);
-            setNextPills([]);
+            nextPills = [];
+            nextPillTime = null;
         }
 
     }
@@ -314,10 +300,10 @@ export default function Home({ navigation }) {
             <ScrollView scrollEnabled={true}>
                 <Text style={styles.title}>Próxima pastilla</Text>
                 <View>
-                    {nextPill
+                    {nextPillTime
                         ? <View style={styles.nextPillContainer}>
-                            <Text style={styles.nextPillName}>{nextPill.pillName}</Text>
-                            <Text style={styles.nextPillHour}>{nextPill.pillHour}</Text>
+                            <Text style={styles.nextPillName}>{nextPillTime.pillName}</Text>
+                            <Text style={styles.nextPillHour}>{nextPillTime.pillHour}</Text>
                         </View>
                         :
                         <View>
@@ -365,37 +351,42 @@ export default function Home({ navigation }) {
                         </View>
                         <View style={styles.backgroundModal}></View>
                     </Modal>
-                    <Modal
-                        animationType="slide"
-                        transparent={true}
-                        visible={modalVisible}
-                    >
-                        <View style={styles.centeredView}>
-                            <View style={styles.modalView}>
-                                <Text style={styles.modalText}>Debes tomar la pastilla {nextPillTime.pillName} de las {nextPillTime.pillHour}.
-                                    Debe tomar {pillsRemaining} pastilla/s</Text>
-                                <Pressable
-                                    style={[styles.button, styles.buttonClose]}
-                                    onPress={() => {
-                                        handleSubmitRecord({
-                                            pillName: nextPillTime.pillName,
-                                            amount: nextPillTime.amount,
-                                            pillID: nextPillTime._id,
-                                            pillHour: moment().format('LT'),
-                                            pillDate: moment().format('L')
-                                        })
-                                        // takeThePill = false;
-                                        pillTaked = true;
-                                        setModalVisible(false);
-                                        setUploadingRecords(true)
-                                    }}
-                                >
-                                    <Text style={styles.textStyle}>Ya la tomé!</Text>
-                                </Pressable>
+                    {
+                        nextPillTime &&
+                        <Modal
+                            animationType="slide"
+                            transparent={true}
+                            visible={modalVisible}
+                        >
+                            <View style={styles.centeredView}>
+                                <View style={styles.modalView}>
+                                    <Text style={styles.modalText}>Debes tomar la pastilla {nextPillTime.pillName} de las {nextPillTime.pillHour}.
+                                        Debe tomar {pillsRemaining} pastilla/s</Text>
+                                    <Pressable
+                                        style={[styles.button, styles.buttonClose]}
+                                        onPress={() => {
+                                            handleSubmitRecord({
+                                                pillName: nextPillTime.pillName,
+                                                amount: nextPillTime.amount,
+                                                pillID: nextPillTime._id,
+                                                pillHour: moment().format('LT'),
+                                                pillDate: moment().format('L')
+                                            })
+                                            // takeThePill = false;
+                                            // setPillTaken(true);
+                                            pillTaken = !pillTaken;
+                                            setModalVisible(false);
+                                            setUploadingRecords(true)
+                                        }}
+                                    >
+                                        <Text style={styles.textStyle}>Ya la tomé!</Text>
+                                    </Pressable>
+                                </View>
                             </View>
-                        </View>
-                        <View style={styles.backgroundModal}></View>
-                    </Modal>
+                            <View style={styles.backgroundModal}></View>
+                        </Modal>
+                    }
+
 
                 </View>
                 <View>
