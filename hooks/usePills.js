@@ -114,13 +114,21 @@ const usePills = () => {
         })
 
         if (nextPillAM.length != 0) nextPill = nextPillAM;
-        nextPill = nextPill.sort();
 
         //Obtener todos los datos de la pastilla filtrada
-        let nextPillComplete = pillsRemainingResult.map((pillRemaining, index) => {
-            if(pillRemaining.pillHour == nextPill[index]){
-                return pillRemaining;
-            }
+        let nextPillComplete = [];
+        pillsRemainingResult.forEach((pillRemaining) => {
+            nextPill.forEach((pill) => {
+                if(pillRemaining.pillHour == pill){
+                    return nextPillComplete.push(pillRemaining);
+                }
+            })
+        })
+
+        nextPillComplete.sort((a,b) => {
+            if(a.pillHour < b.pillHour) return -1;
+            if(a.pillHour > b.pillHour) return 1;
+            return 0;
         })
         
         return { pillsRemainingResult, nextPillComplete, todayPills };

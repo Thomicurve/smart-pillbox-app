@@ -30,17 +30,17 @@ const notificationConfig = {
     },
     color: '#072F4E',
     parameters: {
-        delay: 10000,
+        delay: 8000,
     },
 };
 
 const Delay = (time) => new Promise((resolve) => setTimeout(() => resolve(), time));
-let nextPillTime = { pillName: '', amount: 0, pillID: '', _id: '', pillHour: '', takenToday: 0 };
-let takeThePill = false;
+// let nextPillTime = { pillName: '', amount: 0, pillID: '', _id: '', pillHour: '', takenToday: 0 };
+let nextPillTime = [];
+let schedulePills = [];
 let pillTaken = false;
 let pillsRemaining = 0;
-let nextPills = [];
-let haveToTake = true;
+let takeThePill = false;
 
 export default function Home({ navigation }) {
 
@@ -147,7 +147,6 @@ export default function Home({ navigation }) {
 
     const [changeReload, setChangeReload] = useState(false);
     const [todayPills, setTodayPills] = useState([]);
-    const [nextPill, setNextPill] = useState({ pillName: '', pillHour: '', amount: 0, takenToday: 0 });
     const [modalVisible, setModalVisible] = useState(false);
     const [uploadingRecords, setUploadingRecords] = useState(false);
     const { token } = useContext(TokenContext);
@@ -159,6 +158,8 @@ export default function Home({ navigation }) {
             const result = await ReactAlarm.getScheduledAlarms();
             if (result.length !== 0) {
                 ReactAlarm.stopAlarmSound();
+                takeThePill = false;
+                schedulePills.shift();
             }
         }
 
@@ -167,18 +168,15 @@ export default function Home({ navigation }) {
 
     // ENVIAR NOTIFICACIÓN
     const pushNotification = async (pill) => {
+        const alarmNotifData = {
+            title: `Debe tomar ${pill.pillName} de las ${pill.pillHour}`,
+            message: "Ya es hora de tomar su pastilla",
+            channel: "my_channel_id",
+            small_icon: "ic_launcher",
+        };
 
-        // if (pill.takenToday === 0) {
-            const alarmNotifData = {
-                title: `Debe tomar ${pill.pillName} de las ${pill.pillHour}`,
-                message: "Ya es hora de tomar su pastilla",
-                channel: "my_channel_id",
-                small_icon: "ic_launcher",
-            };
-
-            setModalVisible(true);
-            ReactAlarm.sendNotification(alarmNotifData);
-        // }
+        setModalVisible(true);
+        ReactAlarm.sendNotification(alarmNotifData);
 
 
     }
@@ -188,22 +186,51 @@ export default function Home({ navigation }) {
     const verifyPillHour = async (taskData) => {
         await new Promise(async () => {
             const { delay } = taskData;
-
             for (let i = 0; BackgroundJob.isRunning(); i++) {
                 let hourNow = moment().format('LT');
+                if (nextPillTime.length !== 0) {
+                    nextPillTime.forEach((pill) => {
+                        if (pill.takenToday === 0) {
+                            let formatedPill = '';
+                            if (pill.pillHour[0] === '0') formatedPill = pill.pillHour.substring(1);
+                            else formatedPill = pill.pillHour;
 
-                if (nextPillTime !== null) {
-                    if (nextPillTime.takenToday === 0) {
-                        let formatedPill = '';
-                        // console.log(nextPillTime)
-                        if (nextPillTime.pillHour[0] === '0') formatedPill = nextPillTime.pillHour.substring(1);
-                        else formatedPill = nextPillTime.pillHour;
+                            
+                            if(schedulePills.length == 0 && formatedPill == hourNow) {
+                                schedulePills.push(pill);
+                            }
+                            // PROBLEMA AQUI
+                            schedulePills.forEach((schedulePill) => {
+                                if (schedulePill._id != pill._id && formatedPill == hourNow) schedulePills.push(pill);
+                                else return;
+                            })
+                            
+                            if (formatedPill === hourNow && !takeThePill) {
+                                pushNotification(schedulePills[0]);
+                                takeThePill = true;
+                            }
 
-                        if (formatedPill === hourNow) pushNotification(nextPillTime);
-                    }
+                            // console.log(scheduleResult);
+
+
+                            // if (schedulePills.length != 0) {
+                            //     schedulePills.forEach((schedulePill) => {
+                            //         if (schedulePill._id != pill._id && formatedPill == hourNow) {
+                            //             schedulePills.push(pill);
+                            //         }
+                            //     })
+                            //     if (!takeThePill) {
+                            //         pushNotification(schedulePills[0]);
+                            //         takeThePill = true;
+                            //     }
+                            // } else {
+                                
+                            // }
+
+                        }
+                    })
+
                 }
-
-
                 await Delay(delay);
             }
         });
@@ -222,27 +249,18 @@ export default function Home({ navigation }) {
     const callPills = async () => {
         const todayPillsResult = await GetTodayPills();
         setTodayPills(todayPillsResult.todayPills);
-
         if (todayPillsResult.nextPillComplete.length !== 0) {
-            // setNextPill(todayPillsResult.nextPillComplete[0]);
             let pillFiltered = todayPillsResult.nextPillComplete.filter(({ takenToday }) => takenToday == 0);
-            console.log(pillFiltered)
+            console.log(schedulePills)
             if (pillFiltered.length !== 0) {
-                setNextPill(pillFiltered[0]);
                 pillsRemaining = pillFiltered[0].amount;
-                // nextPills = todayPillsResult.nextPillComplete;
-                nextPillTime = pillFiltered[0];
+                nextPillTime = pillFiltered;
             } else {
-                nextPillTime = null;
+                nextPillTime = [];
             }
-            // pillsRemaining = todayPillsResult.nextPillComplete.amount;
-            // nextPills = todayPillsResult.nextPillComplete;
         } else {
-            setNextPill(undefined);
-            nextPills = [];
-            nextPillTime = null;
+            nextPillTime = [];
         }
-
     }
 
     useEffect(() => {
@@ -300,15 +318,16 @@ export default function Home({ navigation }) {
             <ScrollView scrollEnabled={true}>
                 <Text style={styles.title}>Próxima pastilla</Text>
                 <View>
-                    {nextPillTime
-                        ? <View style={styles.nextPillContainer}>
-                            <Text style={styles.nextPillName}>{nextPillTime.pillName}</Text>
-                            <Text style={styles.nextPillHour}>{nextPillTime.pillHour}</Text>
+                    {nextPillTime.length !== 0 ?
+                        <View style={styles.nextPillContainer}>
+                            <Text style={styles.nextPillName}>{nextPillTime[0].pillName}</Text>
+                            <Text style={styles.nextPillHour}>{nextPillTime[0].pillHour}</Text>
                         </View>
                         :
                         <View>
                             <Text style={styles.notNextPills}>No hay una próxima pastilla</Text>
-                        </View>}
+                        </View>
+                    }
 
                     {todayPills.length == 0
                         ? <View>
@@ -352,7 +371,7 @@ export default function Home({ navigation }) {
                         <View style={styles.backgroundModal}></View>
                     </Modal>
                     {
-                        nextPillTime &&
+                        schedulePills.length != 0 &&
                         <Modal
                             animationType="slide"
                             transparent={true}
@@ -360,20 +379,18 @@ export default function Home({ navigation }) {
                         >
                             <View style={styles.centeredView}>
                                 <View style={styles.modalView}>
-                                    <Text style={styles.modalText}>Debes tomar la pastilla {nextPillTime.pillName} de las {nextPillTime.pillHour}.
+                                    <Text style={styles.modalText}>Debes tomar la pastilla {schedulePills[0].pillName} de las {schedulePills[0].pillHour}.
                                         Debe tomar {pillsRemaining} pastilla/s</Text>
                                     <Pressable
                                         style={[styles.button, styles.buttonClose]}
                                         onPress={() => {
                                             handleSubmitRecord({
-                                                pillName: nextPillTime.pillName,
-                                                amount: nextPillTime.amount,
-                                                pillID: nextPillTime._id,
+                                                pillName: schedulePills[0].pillName,
+                                                amount: schedulePills[0].amount,
+                                                pillID: schedulePills[0]._id,
                                                 pillHour: moment().format('LT'),
                                                 pillDate: moment().format('L')
                                             })
-                                            // takeThePill = false;
-                                            // setPillTaken(true);
                                             pillTaken = !pillTaken;
                                             setModalVisible(false);
                                             setUploadingRecords(true)
