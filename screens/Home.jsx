@@ -35,7 +35,6 @@ const notificationConfig = {
 };
 
 const Delay = (time) => new Promise((resolve) => setTimeout(() => resolve(), time));
-// let nextPillTime = { pillName: '', amount: 0, pillID: '', _id: '', pillHour: '', takenToday: 0 };
 let nextPillTime = [];
 let schedulePills = [];
 let pillTaken = false;
@@ -190,46 +189,35 @@ export default function Home({ navigation }) {
                 let hourNow = moment().format('LT');
                 if (nextPillTime.length !== 0) {
                     nextPillTime.forEach((pill) => {
-                        if (pill.takenToday === 0) {
-                            let formatedPill = '';
-                            if (pill.pillHour[0] === '0') formatedPill = pill.pillHour.substring(1);
-                            else formatedPill = pill.pillHour;
+                        let formatedPill = '';
+                        // FORMATEA LA HORA AMOLDANDOSE AL FORMATO DE LA LIBRERIA
+                        if (pill.pillHour[0] === '0') formatedPill = pill.pillHour.substring(1);
+                        else formatedPill = pill.pillHour;
 
-                            
-                            if(schedulePills.length == 0 && formatedPill == hourNow) {
-                                schedulePills.push(pill);
-                            }
-                            // PROBLEMA AQUI
-                            schedulePills.forEach((schedulePill) => {
-                                if (schedulePill._id != pill._id && formatedPill == hourNow) schedulePills.push(pill);
-                                else return;
-                            })
-                            
-                            if (formatedPill === hourNow && !takeThePill) {
+                        // COLA DE PASTILLAS
+                        //  Busca si hay alguna las pastillas que siguen están en la cola
+                        const scheduleFiltered = schedulePills.some((schedulePill) => schedulePill._id == pill._id);
+
+                        // Si no están en la cola y además es la hora de la pastilla se agregan a la cola 
+                        if (hourNow == formatedPill && !scheduleFiltered) {
+                            schedulePills.push(pill);
+                        }
+
+                        // si queda algo en la cola que ejecute lo siguiente
+                        if (schedulePills.length !== 0) {
+                            // envía la notificación y se utiliza el "takeThePill" para evitar que se envien infinitas notificaciones.
+                            if (hourNow == schedulePills[0].pillHour && !takeThePill) {
                                 pushNotification(schedulePills[0]);
                                 takeThePill = true;
                             }
-
-                            // console.log(scheduleResult);
-
-
-                            // if (schedulePills.length != 0) {
-                            //     schedulePills.forEach((schedulePill) => {
-                            //         if (schedulePill._id != pill._id && formatedPill == hourNow) {
-                            //             schedulePills.push(pill);
-                            //         }
-                            //     })
-                            //     if (!takeThePill) {
-                            //         pushNotification(schedulePills[0]);
-                            //         takeThePill = true;
-                            //     }
-                            // } else {
-                                
-                            // }
-
                         }
                     })
 
+                } 
+                // en el caso de que no haya próximas pastillas pero que hayan quedado pastillas en la cola, estas se le notifican al usuario.
+                if(schedulePills.length !== 0 && !takeThePill) {
+                    pushNotification(schedulePills[0]);
+                    takeThePill = true;
                 }
                 await Delay(delay);
             }
@@ -250,14 +238,12 @@ export default function Home({ navigation }) {
         const todayPillsResult = await GetTodayPills();
         setTodayPills(todayPillsResult.todayPills);
         if (todayPillsResult.nextPillComplete.length !== 0) {
+            // Este filtro es para saber si las pastillas no fueron tomadas aún
             let pillFiltered = todayPillsResult.nextPillComplete.filter(({ takenToday }) => takenToday == 0);
-            console.log(schedulePills)
             if (pillFiltered.length !== 0) {
                 pillsRemaining = pillFiltered[0].amount;
                 nextPillTime = pillFiltered;
-            } else {
-                nextPillTime = [];
-            }
+            } else nextPillTime = [];
         } else {
             nextPillTime = [];
         }

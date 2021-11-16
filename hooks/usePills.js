@@ -48,6 +48,7 @@ const usePills = () => {
     }, [token])
 
 
+    // OBTENER LOS REGISTROS DE HOY
     const getTodayRecords = (pill) => {
         let recordsRepeated = {};
         pillsAndRecords.records.forEach(record => {
@@ -63,6 +64,7 @@ const usePills = () => {
 
     }
 
+    // SABER SI LA HORA DE LA PASTILLA SE PASÓ O SI TODAVÍA FALTA.
     const getHour = (pill) => {
         let hourChanged = pill.pillHour.split('').slice(0, 5).join('');
 
@@ -125,6 +127,7 @@ const usePills = () => {
             })
         })
 
+        // Ordenar las pastillas de la mas cercana a la hora actual, a la mas tardía
         nextPillComplete.sort((a,b) => {
             if(a.pillHour < b.pillHour) return -1;
             if(a.pillHour > b.pillHour) return 1;
