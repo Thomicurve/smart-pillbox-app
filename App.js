@@ -22,7 +22,7 @@ const noLoggedNavOptions = {
 
 const loggedNavOptions = ({ navigation, route }) => ({
   headerTitle: props => <NavbarLogged {...props} navigation={navigation} route={route} />,
-  headerBackVisible: false, headerStyle: { backgroundColor: '#064372', borderBottomWidth: 0 }
+  headerBackVisible: false, headerStyle: { backgroundColor: '#064372', borderBottomWidth: 0, paddingHorizontal: 0 }
 });
 
 export default function App() {
@@ -40,46 +40,46 @@ export default function App() {
 
   return (
     <TokenContextProvider>
-        <NavigationContainer>
-          <Stack.Navigator initialRouteName={haveToken ? 'Home' : 'Welcome'}>
-            {
-              !haveToken &&
-              <Stack.Screen
-                name="Welcome"
-                component={Welcome}
-                options={noLoggedNavOptions}
-              />
-            }
-
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName={haveToken ? 'Home' : 'Welcome'}>
+          {
+            !haveToken &&
             <Stack.Screen
-              name="Home"
-              component={Home}
-              options={loggedNavOptions}
-            />
-            <Stack.Screen
-              name="NewPill"
-              component={NewPill}
-              options={loggedNavOptions}
-            />
-
-            <Stack.Screen
-              name="Records"
-              component={Records}
-              options={loggedNavOptions}
-            />
-
-            <Stack.Screen
-              name="Register"
-              component={Register}
+              name="Welcome"
+              component={Welcome}
               options={noLoggedNavOptions}
             />
-            <Stack.Screen
-              name="Login"
-              component={Login}
-              options={noLoggedNavOptions}
-            />
-          </Stack.Navigator>
-        </NavigationContainer>
+          }
+
+          <Stack.Screen
+            name="Home"
+            component={Home}
+            options={loggedNavOptions}
+          />
+          <Stack.Screen
+            name="NewPill"
+            component={NewPill}
+            options={loggedNavOptions}
+          />
+
+          <Stack.Screen
+            name="Records"
+            component={Records}
+            options={loggedNavOptions}
+          />
+
+          <Stack.Screen
+            name="Register"
+            component={Register}
+            options={noLoggedNavOptions}
+          />
+          <Stack.Screen
+            name="Login"
+            component={Login}
+            options={noLoggedNavOptions}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
     </TokenContextProvider>
   );
 }

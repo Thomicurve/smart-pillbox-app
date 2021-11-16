@@ -1,9 +1,10 @@
-import React, {useContext} from 'react'
-import { View, StyleSheet, Text, TouchableOpacity } from 'react-native'
+import React, { useContext } from 'react'
+import { View, StyleSheet, Text, TouchableOpacity, Switch } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
 import TokenContext from '../context/TokenContext'
 import useAuthUser from '../hooks/useAuthUser';
+import useBT from '../hooks/useBT';
 
 const IconContainerStyles = {
     borderRadius: 50,
@@ -19,9 +20,10 @@ const navGradients = {
     second: '#3378AD'
 }
 
-export default function Navbar({navigation}) {
+export default function Navbar({ navigation }) {
     const { deleteToken } = useAuthUser();
-    const { setToken } = useContext(TokenContext)
+    const { setToken } = useContext(TokenContext);
+    const { toggleSwitch, isEnabled, findSmartPillbox } = useBT();
 
     const logoutUser = async () => {
         await deleteToken();
@@ -34,7 +36,20 @@ export default function Navbar({navigation}) {
     return (
 
         <View style={styles.container}>
-            <View style={{flexBasis: 200}}>
+            <LinearGradient colors={[navGradients.first, navGradients.second]} end={{ x: 1, y: 0 }} style={styles.pingToBt}>
+                <View style={{ display: 'flex', flexDirection: 'row' }}>
+                    <MaterialIcons name="location-pin" size={24} color="white" />
+                    <Switch
+                        trackColor={{ false: "#767577", true: "#49d864" }}
+                        thumbColor={isEnabled ? "#f4f3f4" : "#f4f3f4"}
+                        ios_backgroundColor="#3e3e3e"
+                        onValueChange={toggleSwitch}
+                        onChange={isEnabled ? findSmartPillbox(isEnabled) : findSmartPillbox(isEnabled)}
+                        value={isEnabled}
+                    />
+                </View>
+            </LinearGradient>
+            <View>
                 <LinearGradient colors={[navGradients.first, navGradients.second]} end={{ x: 1, y: 0 }} style={styles.titleContainer}>
                     <Text style={styles.title}>Smart Pillbox</Text>
                 </LinearGradient>
@@ -46,7 +61,7 @@ export default function Navbar({navigation}) {
                     </TouchableOpacity>
                 </LinearGradient>
             </View>
-        </View>
+        </View >
 
     )
 }
@@ -54,11 +69,16 @@ export default function Navbar({navigation}) {
 const styles = StyleSheet.create({
     container: {
         display: 'flex',
-        justifyContent: 'space-around',
+        justifyContent: 'space-between',
         alignItems: 'center',
         flexDirection: 'row',
         width: '100%',
-        paddingRight: 25,
+        paddingRight: 30
+    },
+    pingToBt: {
+        paddingVertical: 5,
+        paddingHorizontal: 5,
+        borderRadius: 50,
     },
     titleContainer: {
         paddingVertical: 5,

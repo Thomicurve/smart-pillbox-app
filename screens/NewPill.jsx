@@ -81,14 +81,19 @@ export default function NewPill({ navigation: { navigate } }) {
             pillHour: hour.length == 7 ? '0'.concat(hour) : hour,
             amount
         };
-        const result = await UploadPills(token, dataObj);
-        if (result.message !== 'Pastilla cargada con éxito') {
-            return ToastAndroid.show(`${result.message}`, ToastAndroid.SHORT, ToastAndroid.TOP);
-        } else {
-            ToastAndroid.show(`${result.message}`, ToastAndroid.SHORT, ToastAndroid.TOP);
-            setTimeout(() => {
-                navigate('Home');
-            }, 2500)
+        try {
+            const result = await UploadPills(token, dataObj);
+            if (result.message !== 'Pastilla cargada con éxito') {
+                return ToastAndroid.show(`${result.message}`, ToastAndroid.SHORT, ToastAndroid.TOP);
+            } else {
+                ToastAndroid.show(`${result.message}`, ToastAndroid.SHORT, ToastAndroid.TOP);
+                setTimeout(() => {
+                    navigate('Home');
+                }, 2500)
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error subiendo la pastillas');
         }
     }
 
@@ -111,7 +116,7 @@ export default function NewPill({ navigation: { navigate } }) {
                         <TouchableOpacity
                             style={styles.hourButton}
                             onPress={handleTimePicker}>
-                                <Text style={styles.hourText}>{hour}</Text>
+                            <Text style={styles.hourText}>{hour}</Text>
                         </TouchableOpacity>
                         {
                             activateTimePicker &&
@@ -229,7 +234,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         textAlign: 'center',
         marginBottom: 5
-    },  
+    },
     hourButton: {
         backgroundColor: '#072F4E',
         paddingVertical: 8,

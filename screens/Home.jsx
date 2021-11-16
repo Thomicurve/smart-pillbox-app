@@ -2,21 +2,16 @@ import React, { useState, useEffect, useContext } from 'react'
 import TokenContext from '../context/TokenContext';
 import {
     View, Text, StyleSheet, ScrollView,
-    TouchableOpacity, SafeAreaView, Pressable, Modal, Switch
+    TouchableOpacity, SafeAreaView, Pressable, Modal
 } from 'react-native'
 import { useIsFocused } from '@react-navigation/native';
 import BackgroundJob from 'react-native-background-actions';
 import moment from 'moment';
 import ReactAlarm from 'react-native-alarm-notification';
 
-//imports Alan
-import BleManager from 'react-native-ble-manager';
-import { stringToBytes } from "convert-string";
-//imports Alan - end
-
 
 import usePills from '../hooks/usePills';
-import { SubmitRecords } from '../services/RecordsServices'
+import { SubmitRecords } from '../services/RecordsServices';
 import PillCard from '../components/PillCard';
 
 
@@ -41,116 +36,7 @@ let pillTaken = false;
 let pillsRemaining = 0;
 let takeThePill = false;
 
-let btCelular = false; //bt celular esta enacendido?
-let btConectado = false; //bt celular y arduino estan contactados?
-const ID_HM10 = '50:33:8B:13:5D:01'; //ID del bluetooth del arduino
-let boolFindSmartPillbox = false; //bool determina si se busca o no el pastillero
-
 export default function Home({ navigation }) {
-
-    const [isEnabled, setIsEnabled] = useState(false); //switch state
-    const toggleSwitch = () => setIsEnabled(previousState => !previousState); //switch state
-
-    //1- Funcion Comprobar si el bluetooth del celular esta encendido y permitido
-    async function checkBT_device() {
-        await BleManager.enableBluetooth()
-            .then(() => {
-                btCelular = true;
-                console.info("El bluetooth ya esta encendido");
-            })
-            .catch((error) => {
-                btCelular = false;
-                console.info("El usuario no permite activar el bluetooth");
-                console.error(error);
-            });
-    }
-
-    //2- Funcion escanear dispositivos en 3seg
-    async function scanDevices() {
-        await BleManager.scan([], 3, true).then(() => {
-            console.info("Empezando escaneo...");
-        });
-        await Delay(3000); //esperar 3 segundos
-        await BleManager.stopScan().then(() => { //Detener el escaneo
-            console.log("Scan stopped");
-        });
-    }
-
-    //3- Funcion conectar al arduino
-    async function conectar() {
-        await BleManager.connect(ID_HM10)
-            .then(async () => {
-                // Success code
-                console.log("Connected");
-                await BleManager.retrieveServices(ID_HM10)
-                // .then(
-                //     (peripheralInfo) => {
-                //         // Success code
-                //         // console.log("Peripheral info:", peripheralInfo);
-                //     }
-                // );
-            })
-            .catch((error) => {
-                // Failure code
-                console.error(error);
-                btConectado = false;
-            });
-    }
-
-    //4- Funcion revisar conexion con el celular y el arduino
-    async function checkArduino_Connected() {
-        await BleManager.isPeripheralConnected(
-            ID_HM10,
-            []
-        ).then((isConnected) => {
-            btConectado = isConnected;
-            if (isConnected) {
-                console.log("Peripheral is connected!");
-                setInterval(apagar, 300);
-            } else {
-                console.log("Peripheral is NOT connected!");
-                btConectado = false;
-            }
-        });
-    }
-
-    // Funcion Apagar BUZZER
-    async function apagar() {
-        if (!boolFindSmartPillbox) { //Si no se busca el pastillero enviar 0 para que no suene el pastillero
-            const data = stringToBytes('0');
-            await BleManager.write(
-                ID_HM10,
-                "0000ffe0-0000-1000-8000-00805f9b34fb",
-                "0000ffe1-0000-1000-8000-00805f9b34fb",
-                data
-            )
-                // .then(() => {
-                //     // Success code
-                //     console.log("Write: " + data);
-                // })
-                .catch((error) => {
-                    console.error(error);
-                    btConectado = false;
-                    // NOTIFIACION CELULAR DE PASTILLERO DESCONECTADO AQUI
-                });
-        } else {
-            return; //No enviar nada para que el pastillero suene
-        }
-    }
-
-    function findSmartPillbox(isEnabled) {
-        if (!isEnabled) { //switch no activado
-            boolFindSmartPillbox = false; //No se buscara el pastillero
-        } else { //switch activado
-            if (!btConectado) { //antes verificar que el celular y pastillero esten contectados
-                console.log("El celular y pastillero deben estar conectados!");
-                return;
-            } else {
-                boolFindSmartPillbox = true; //Si se se buscara el pastillero
-            }
-        }
-    }
-
     const isFocused = useIsFocused();
 
     const [changeReload, setChangeReload] = useState(false);
@@ -175,7 +61,7 @@ export default function Home({ navigation }) {
     }, [pillTaken])
 
     // ENVIAR NOTIFICACIÓN
-    const pushNotification = async (pill) => {
+    const pushNotification = (pill) => {
         const alarmNotifData = {
             title: `Debe tomar ${pill.pillName} de las ${pill.pillHour}`,
             message: "Ya es hora de tomar su pastilla",
@@ -185,8 +71,6 @@ export default function Home({ navigation }) {
 
         setModalVisible(true);
         ReactAlarm.sendNotification(alarmNotifData);
-
-
     }
 
 
@@ -244,17 +128,22 @@ export default function Home({ navigation }) {
 
     // ESTABLECER TODAS LAS PASTILLAS QUE SE VAN A MOSTRAR EN LA UI
     const callPills = async () => {
-        const todayPillsResult = await GetTodayPills();
-        setTodayPills(todayPillsResult.todayPills);
-        if (todayPillsResult.nextPillComplete.length !== 0) {
-            // Este filtro es para saber si las pastillas no fueron tomadas aún
-            let pillFiltered = todayPillsResult.nextPillComplete.filter(({ takenToday }) => takenToday == 0);
-            if (pillFiltered.length !== 0) {
-                pillsRemaining = pillFiltered[0].amount;
-                nextPillTime = pillFiltered;
-            } else nextPillTime = [];
-        } else {
-            nextPillTime = [];
+        try {
+            const todayPillsResult = await GetTodayPills();
+            setTodayPills(todayPillsResult.todayPills);
+            if (todayPillsResult.nextPillComplete.length !== 0) {
+                // Este filtro es para saber si las pastillas no fueron tomadas aún
+                let pillFiltered = todayPillsResult.nextPillComplete.filter(({ takenToday }) => takenToday == 0);
+                if (pillFiltered.length !== 0) {
+                    pillsRemaining = pillFiltered[0].amount;
+                    nextPillTime = pillFiltered;
+                } else nextPillTime = [];
+            } else {
+                nextPillTime = [];
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error obteniendo pastillas');
         }
     }
 
@@ -266,43 +155,12 @@ export default function Home({ navigation }) {
         navigation.navigate('NewPill')
     }
 
-
-    useEffect(() => {
-
-        async function bluetooth() {
-            // Iniciar modulo bluetooth de la libreria
-            await BleManager.start({ showAlert: true }).then(() => {
-                console.info("Libreria iniciada...");
-            });
-            await checkBT_device();
-            if (btCelular) { //si el bluetooth esta encendido y permitido
-                await scanDevices();
-                await conectar();
-                await checkArduino_Connected();
-                if (!btConectado) {
-                    console.error("No se puedo conectar con el pastillero");
-                    btConectado = false;
-                }
-            } else {
-                console.error("El bluetooth no esta encendido");
-                btConectado = false;
-            }
-
-
-
-        }
-        bluetooth();
-
-    }, [])
-
-
     // SUBIR LOS REGISTROS
     const handleSubmitRecord = async (data) => {
         try {
             await SubmitRecords(token, data);
             setUploadingRecords(false);
             alert('Registro guardado correctamente!');
-
         } catch (error) {
             alert('Error guardando el registro:', error);
         }
@@ -417,18 +275,6 @@ export default function Home({ navigation }) {
                     >
                         <Text style={styles.textStyle}>Mostrar potencia antena</Text>
                     </TouchableOpacity>
-                </View>
-                {/* Switch para hacer sonar el buzzer*/}
-                <View style={styles.centeredView}>
-                    <Text style={styles.title}>{isEnabled ? "Switch is ON" : "Switch is OFF"}</Text>
-                    <Switch
-                        trackColor={{ false: "#767577", true: "#49d864" }}
-                        thumbColor={isEnabled ? "#f4f3f4" : "#f4f3f4"}
-                        ios_backgroundColor="#3e3e3e"
-                        onValueChange={toggleSwitch}
-                        onChange={isEnabled ? findSmartPillbox(isEnabled) : findSmartPillbox(isEnabled)}
-                        value={isEnabled}
-                    />
                 </View>
             </ScrollView>
         </SafeAreaView>
