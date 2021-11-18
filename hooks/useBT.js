@@ -135,33 +135,6 @@ const useBT = () => {
         });
     }
 
-    // Funcion Apagar BUZZER
-    async function apagar() {
-        // if(!btConectado) {
-        //     clearInterval(loopApagar);
-        //     researchPillbox(); //revisar conexion con el arduino
-        // }else if (!boolFindSmartPillbox && btConectado == true) { //Si no se busca el pastillero enviar 0 para que no suene el pastillero
-        //     const data = stringToBytes('0');
-        //     await BleManager.write(
-        //         ID_HM10,
-        //         "0000ffe0-0000-1000-8000-00805f9b34fb",
-        //         "0000ffe1-0000-1000-8000-00805f9b34fb",
-        //         data
-        //     )
-        //         // .then(() => {
-        //         //     // Success code
-        //         //     console.log("Write: " + data);
-        //         // })
-        //         .catch((error) => {
-        //             console.error(error);
-        //             btConectado = false;
-        //             // NOTIFIACION CELULAR DE PASTILLERO DESCONECTADO AQUI
-        //         });
-        // } else if(boolFindSmartPillbox && btConectado == true){ //si se trata del switch buscar pastillero y bt siguen conectados
-        //     return; //No enviar nada para que el pastillero suene
-        // }
-    }
-
     function findSmartPillbox(isEnabled) {
         if (!isEnabled) { //switch no activado
             boolFindSmartPillbox = false; //No se buscara el pastillero
