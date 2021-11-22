@@ -8,6 +8,7 @@ import { useIsFocused } from '@react-navigation/native';
 import BackgroundJob from 'react-native-background-actions';
 import moment from 'moment';
 import ReactAlarm from 'react-native-alarm-notification';
+import { MaterialIcons } from '@expo/vector-icons';
 
 
 import usePills from '../hooks/usePills';
@@ -182,6 +183,19 @@ export default function Home({ navigation }) {
                             <Text style={styles.notNextPills}>No hay una próxima pastilla</Text>
                         </View>
                     }
+                    <View style={styles.pillsButtons}>
+                        <TouchableOpacity
+                            style={styles.pillButtons}
+                            onPress={() => navigation.navigate('Records')}
+                        >
+                            <Text style={styles.textStyle}>Registros de pastillas</Text>
+                            <MaterialIcons name="assignment" size={24} color="white" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={goToCreatePill} style={styles.pillButtons}>
+                            <Text style={styles.textStyle}>Nueva pastilla</Text>
+                            <MaterialIcons name="add-alarm" size={24} color="white" />
+                        </TouchableOpacity>
+                    </View>
 
                     {todayPills.length == 0
                         ? <View>
@@ -201,6 +215,7 @@ export default function Home({ navigation }) {
                                             key={pill._id}
                                             setChangeReload={setChangeReload}
                                             changeReload={changeReload}
+                                            navigation={navigation}
                                         />
                                     )
                                 })}
@@ -208,10 +223,7 @@ export default function Home({ navigation }) {
                         </View>
                     }
                 </View>
-                <View style={styles.pillsButtons}>
-                    <TouchableOpacity onPress={goToCreatePill} style={styles.newPillButton}>
-                        <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Nueva pastilla</Text>
-                    </TouchableOpacity>
+                <View>
                     <Modal
                         animationType="slide"
                         transparent={true}
@@ -259,22 +271,6 @@ export default function Home({ navigation }) {
                     }
 
 
-                </View>
-                <View>
-                    <TouchableOpacity
-                        style={styles.newPillButton}
-                        onPress={() => navigation.navigate('Records')}
-                    >
-                        <Text style={styles.textStyle}>Registros de pastillas</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={styles.newPillButton}
-                        title="Mostrar potencia antena"
-                        onPress={() => showRSSI()}
-                    >
-                        <Text style={styles.textStyle}>Mostrar potencia antena</Text>
-                    </TouchableOpacity>
                 </View>
             </ScrollView>
         </SafeAreaView>
@@ -329,7 +325,9 @@ const styles = StyleSheet.create({
     textStyle: {
         color: "white",
         fontWeight: "bold",
-        textAlign: "center"
+        textAlign: "center",
+        marginRight: 10,
+        fontSize: 16
     },
     modalText: {
         marginBottom: 15,
@@ -411,21 +409,21 @@ const styles = StyleSheet.create({
     },
     pillsButtons: {
         display: 'flex',
-        flexDirection: 'row',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        width: '80%',
-        marginLeft: 'auto',
-        marginRight: 'auto',
-        marginBottom: 30,
+        width: '100%',
         marginTop: 30,
     },
-    newPillButton: {
+    pillButtons: {
         backgroundColor: "#1F547E",
         paddingHorizontal: 20,
         paddingVertical: 10,
         borderRadius: 20,
-        marginLeft: 40,
-        marginVertical: 5
-    }
+        marginVertical: 5,
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'center'
+    },
 })

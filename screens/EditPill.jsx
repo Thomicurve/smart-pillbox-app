@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react'
 import { View, Text, StyleSheet, TextInput, ToastAndroid, FlatList, TouchableOpacity } from 'react-native'
 import TokenContext from '../context/TokenContext';
 import DateTimePicker from '@react-native-community/datetimepicker'
-import { UploadPills } from '../services/PillsServices'
+import { EditPills } from '../services/PillsServices'
 
 import useForm from '../hooks/useForm';
 
@@ -10,58 +10,67 @@ import useForm from '../hooks/useForm';
 const days = [
     {
         key: 1,
-        letters: 'L'
+        letters: 'L',
+        firstChange: false
     },
     {
         key: 2,
-        letters: 'M'
+        letters: 'M',
+        firstChange: false
     },
     {
         key: 3,
-        letters: 'X'
+        letters: 'X',
+        firstChange: false
     },
     {
         key: 4,
-        letters: 'J'
+        letters: 'J',
+        firstChange: false
     },
     {
         key: 5,
-        letters: 'V'
+        letters: 'V',
+        firstChange: false
     },
     {
         key: 6,
-        letters: 'S'
+        letters: 'S',
+        firstChange: false
     },
     {
         key: 7,
-        letters: 'D'
+        letters: 'D',
+        firstChange: false
     }
 ]
 
 
-export default function NewPill({ navigation: { navigate } }) {
+export default function NewPill({ route, navigation: { navigate } }) {
 
     const { token } = useContext(TokenContext);
     const [activateTimePicker, setActivateTimePicker] = useState(false);
+    const [willChange, setWillChange] = useState(false);
     const [amount, setAmount] = useState(0);
     const [pillName, setPillName] = useState('');
-    const { changeDisabledButton, handleHour, handleTimePicker, 
-        handlePillName, handleAmount, hour, pillDays, dateSelected } = useForm({setActivateTimePicker, setPillName, setAmount});
+    const { changeDisabledButton, handleHour, handleTimePicker,
+        handlePillName, handleAmount, hour, pillDays, dateSelected } = useForm({ setActivateTimePicker, setPillName, setAmount });
 
+    const { pill } = route.params;
 
     const uploadPill = async () => {
         const dataObj = {
             pillName,
             repeat: parseInt(pillDays.join('')),
-            pillHour: hour.length == 7 ? '0'.concat(hour) : hour,
+            pillHour: hour == '10:00 PM' ? '' : hour.length == 7 ? '0'.concat(hour) : hour,
             amount
         };
         try {
-            const result = await UploadPills(token, dataObj);
-            if (result.message !== 'Pastilla cargada con éxito') {
+            const result = await EditPills(token, pill._id, dataObj);
+            if (result.message !== 'pill updated') {
                 return ToastAndroid.show(`${result.message}`, ToastAndroid.SHORT, ToastAndroid.TOP);
             } else {
-                ToastAndroid.show(`${result.message}`, ToastAndroid.SHORT, ToastAndroid.TOP);
+                ToastAndroid.show(`Pastilla actualizada!`, ToastAndroid.SHORT, ToastAndroid.TOP);
                 setTimeout(() => {
                     navigate('Home');
                 }, 2500)
@@ -71,13 +80,13 @@ export default function NewPill({ navigation: { navigate } }) {
             alert('Error subiendo la pastillas');
         }
     }
-    
+
 
     const navigateToHome = () => navigate('Home');
 
     return (
         <View style={styles.containerStyles}>
-            <Text style={styles.newPillTitle}>Nueva pastilla</Text>
+            <Text style={styles.newPillTitle}>Editar pastilla {pill.pillName}</Text>
             <View style={styles.inputsContainer}>
                 <TextInput
                     placeholder="Nombre de la pastilla"
@@ -88,7 +97,7 @@ export default function NewPill({ navigation: { navigate } }) {
                 />
                 <View style={styles.hourAndAmount}>
                     <View>
-                        <Text style={styles.middleInputTitles}>Horario</Text>
+                        <Text style={styles.middleInputTitles}>Horario: {pill.pillHour}</Text>
                         <TouchableOpacity
                             style={styles.hourButton}
                             onPress={handleTimePicker}>
@@ -108,7 +117,7 @@ export default function NewPill({ navigation: { navigate } }) {
                     </View>
 
                     <View>
-                        <Text style={styles.middleInputTitles}>Cantidad</Text>
+                        <Text style={styles.middleInputTitles}>Cantidad: {pill.amount}</Text>
                         <TextInput
                             style={styles.amountInput}
                             placeholderTextColor={'#ccc'}
@@ -133,7 +142,10 @@ export default function NewPill({ navigation: { navigate } }) {
                                     key={item.key}
                                     style={{ borderColor: pillDays.includes(item.key) ? "#71C25C" : "#C4C4C4", ...styles.daysContainer }}>
                                     <Text
-                                        onPress={() => changeDisabledButton(item.key)}
+                                        onPress={() => {
+                                            changeDisabledButton(item.key)
+                                            item.firstChange = true;
+                                        }}
                                         style={{
                                             backgroundColor: pillDays.includes(item.key) ? "#478A6D" : "#717171",
                                             ...styles.daysItems
@@ -152,7 +164,7 @@ export default function NewPill({ navigation: { navigate } }) {
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.actionButtons} onPress={uploadPill}>
-                        <Text style={styles.actionTexts}>Cargar pastilla</Text>
+                        <Text style={styles.actionTexts}>Actualizar pastilla</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -221,6 +233,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#fff',
         fontWeight: 'bold',
+        textAlign: 'center'
     },
     amountInput: {
         borderWidth: 2,

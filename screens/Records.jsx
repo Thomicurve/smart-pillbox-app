@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useContext } from 'react';
 import TokenContext from '../context/TokenContext';
 import moment from 'moment';
-import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { SafeAreaView, ScrollView, StyleSheet, Text, View, ActivityIndicator } from 'react-native'
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+
 
 import RecordCard from '../components/RecordCard';
 import { GetRecords } from '../services/RecordsServices'
@@ -103,12 +104,13 @@ export default function Records() {
                             </View>
                             :
                             <View style={styles.recordContainer}>
-                                <Text>No se encontraron registros.</Text>
+                                <Text style={{...styles.textStyle, fontSize: 20, marginTop: 70}}>No se encontraron registros</Text>
                             </View>
 
                         :
                         <View style={styles.recordContainer}>
-                            <Text>Cargando... 👨‍💻</Text>
+                            <ActivityIndicator size="large" color="#fff" style={{marginBottom: 20}} />
+                            <Text style={styles.textStyle}>Cargando...</Text>
                         </View>
                 }
 
@@ -118,6 +120,11 @@ export default function Records() {
 }
 
 const styles = StyleSheet.create({
+    textStyle: {
+        color: '#fff', 
+        fontSize: 16, 
+        fontWeight: 'bold'
+    },
     container: {
         backgroundColor: '#072F4E',
         flex: 1,

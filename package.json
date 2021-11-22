@@ -25,6 +25,7 @@
     "react-dom": "16.13.1",
     "react-native": "~0.63.4",
     "react-native-alarm-notification": "^1.8.0",
+    "react-native-animated-loader": "^0.0.9",
     "react-native-background-actions": "^2.6.5",
     "react-native-ble-manager": "^7.6.3",
     "react-native-elements": "^3.4.2",

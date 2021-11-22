@@ -29,6 +29,23 @@ const UploadPills = async (token, dataObj) => {
     }}
 }
 
+const EditPills = async (token, pillID, dataObj) => {
+    try{
+        const { data } = await axios({
+            method: 'PUT',
+            url: `${apiLink}/edit-pill/${pillID}`,
+            headers: {
+                "x-access-token": token
+            },
+            data: dataObj
+        })
+
+        return data;
+    } catch (err) {
+        return console.error(`Error eliminando pastillas: ${error}`);
+    }
+}
+
 const DeletePills = async (token, pillID) => {
     try{
         const { data } = await axios({
@@ -45,4 +62,4 @@ const DeletePills = async (token, pillID) => {
     }
 }
 
-export {GetPills, UploadPills, DeletePills};
+export {GetPills, UploadPills, DeletePills, EditPills};

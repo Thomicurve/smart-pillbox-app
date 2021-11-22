@@ -12,6 +12,7 @@ import Login from './screens/Login'
 import Home from './screens/Home'
 import NewPill from './screens/NewPill';
 import Records from './screens/Records';
+import EditPill from './screens/EditPill';
 
 const Stack = createNativeStackNavigator();
 
@@ -65,6 +66,12 @@ export default function App() {
           <Stack.Screen
             name="Records"
             component={Records}
+            options={loggedNavOptions}
+          />
+
+          <Stack.Screen
+            name="EditPill"
+            component={EditPill}
             options={loggedNavOptions}
           />
 
