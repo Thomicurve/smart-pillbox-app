@@ -6,6 +6,7 @@ const useForm = ({setActivateTimePicker, setPillName, setAmount}) => {
     const [hour, setHour] = useState('10:00 PM');
     const [dateSelected, setDateSelected] = useState(new Date());
     const [pillDays, setPillDays] = useState([]);
+    const [position, setPosition] = useState(null);
 
     const handleTimePicker = () => {
         setActivateTimePicker(true);
@@ -36,7 +37,21 @@ const useForm = ({setActivateTimePicker, setPillName, setAmount}) => {
     
     const handleAmount = (value) =>  setAmount(value);
 
-    return {changeDisabledButton, handleHour, handleTimePicker, handlePillName, handleAmount, hour, pillDays, dateSelected};
+    const handlePosition = (value) => {
+        setPosition(value)
+    }
+
+    return {
+        changeDisabledButton, 
+        handleHour, 
+        handleTimePicker, 
+        handlePillName, 
+        handleAmount, 
+        hour, 
+        pillDays, 
+        dateSelected,
+        handlePosition, 
+        position};
 }
 
 export default useForm;

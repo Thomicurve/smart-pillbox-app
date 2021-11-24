@@ -2,8 +2,9 @@ import React, { useState, useEffect, useContext } from 'react'
 import TokenContext from '../context/TokenContext';
 import {
     View, Text, StyleSheet, ScrollView,
-    TouchableOpacity, SafeAreaView, Pressable, Modal
-} from 'react-native'
+    TouchableOpacity, SafeAreaView, Pressable, Modal, Image
+} from 'react-native';
+import renderSmartPillbox from '../assets/illustrations/render-pastillero.png';
 import { useIsFocused } from '@react-navigation/native';
 import BackgroundJob from 'react-native-background-actions';
 import moment from 'moment';
@@ -26,7 +27,7 @@ const notificationConfig = {
     },
     color: '#072F4E',
     parameters: {
-        delay: 8000,
+        delay: 5000,
     },
 };
 
@@ -36,6 +37,7 @@ let schedulePills = [];
 let pillTaken = false;
 let pillsRemaining = 0;
 let takeThePill = false;
+const positionSelectedColor = '#F2D06B';
 
 export default function Home({ navigation }) {
     const isFocused = useIsFocused();
@@ -53,6 +55,7 @@ export default function Home({ navigation }) {
             const result = await ReactAlarm.getScheduledAlarms();
             if (result.length !== 0) {
                 ReactAlarm.stopAlarmSound();
+                ReactAlarm.removeAllFiredNotifications();
                 takeThePill = false;
                 schedulePills.shift();
             }
@@ -142,6 +145,7 @@ export default function Home({ navigation }) {
             } else {
                 nextPillTime = [];
             }
+            console.log('today pills',todayPills.length)
         } catch (error) {
             console.error(error);
             alert('Error obteniendo pastillas');
@@ -173,7 +177,7 @@ export default function Home({ navigation }) {
             <ScrollView scrollEnabled={true}>
                 <Text style={styles.title}>Próxima pastilla</Text>
                 <View>
-                    {nextPillTime.length !== 0 ?
+                    {nextPillTime.length != 0 ?
                         <View style={styles.nextPillContainer}>
                             <Text style={styles.nextPillName}>{nextPillTime[0].pillName}</Text>
                             <Text style={styles.nextPillHour}>{nextPillTime[0].pillHour}</Text>
@@ -197,9 +201,9 @@ export default function Home({ navigation }) {
                         </TouchableOpacity>
                     </View>
 
-                    {todayPills.length == 0
+                    {todayPills.length === 0
                         ? <View>
-                            <Text>No hay pastillas aún</Text>
+                            <Text style={styles.notNextPills}>No hay pastillas aún</Text>
                         </View>
                         :
 
@@ -247,6 +251,19 @@ export default function Home({ navigation }) {
                                 <View style={styles.modalView}>
                                     <Text style={styles.modalText}>Debes tomar la pastilla {schedulePills[0].pillName} de las {schedulePills[0].pillHour}.
                                         Debe tomar {pillsRemaining} pastilla/s</Text>
+                                    <View>
+                                        <Image style={{ width: 400, height: 270 }} source={renderSmartPillbox} />
+                                        <View style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-around', position: 'absolute', top: 155, width: '100%', right: 80}}>
+                                            <View
+                                                style={[styles.pillSlot, { backgroundColor: schedulePills[0].position == 1 && positionSelectedColor}]}></View>
+                                            <View
+                                                style={[styles.pillSlot, { backgroundColor: schedulePills[0].position == 2 && positionSelectedColor}]}></View>
+                                            <View
+                                                style={[styles.pillSlot, { backgroundColor: schedulePills[0].position == 3 && positionSelectedColor}]}></View>
+                                            <View
+                                                style={[styles.pillSlot, { backgroundColor: schedulePills[0].position == 4 && positionSelectedColor}]}></View>
+                                        </View>
+                                    </View>
                                     <Pressable
                                         style={[styles.button, styles.buttonClose]}
                                         onPress={() => {
@@ -278,6 +295,13 @@ export default function Home({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+    pillSlot: {
+        borderRadius: 50,
+        width: 30,
+        height: 30,
+        // position: 'absolute',
+        // top: 155
+    },
     backgroundModal: {
         position: 'absolute',
         backgroundColor: '#000',
