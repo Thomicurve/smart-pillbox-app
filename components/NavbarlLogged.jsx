@@ -44,7 +44,7 @@ export default function Navbar({ navigation }) {
                         thumbColor={isEnabled ? "#f4f3f4" : "#f4f3f4"}
                         ios_backgroundColor="#3e3e3e"
                         onValueChange={toggleSwitch}
-                        onChange={isEnabled && findSmartPillbox(isEnabled)}
+                        onChange={isEnabled ? findSmartPillbox(isEnabled) : findSmartPillbox(isEnabled)}
                         value={isEnabled}
                     />
                 </View>

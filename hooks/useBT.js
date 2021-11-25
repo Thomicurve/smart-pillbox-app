@@ -116,7 +116,7 @@ const useBT = () => {
                     }
                 }, 300);
             } else {
-                // ! console.error("Peripheral is NOT connected!");
+                // console.error("Peripheral is NOT connected!");
                 btConectado = false;
             }
         });
