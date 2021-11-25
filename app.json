@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "smart-pillbox-app",
+    "name": "Smart Pillbox",
     "slug": "smart-pillbox-app",
-    "version": "1.0.0",
+    "version": "5.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#072F4E"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
@@ -17,14 +17,19 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "icon": "./assets/iconIOS.png"
     },
     "android": {
       "package": "smartpillbox.pillboxapp",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FFFFFF"
+        "backgroundColor": "#072F4E"
       }
+    },
+    "androidStatusBar": {
+      "backgroundColor": "#072F4E",
+      "translucent": false
     },
     "web": {
       "favicon": "./assets/favicon.png"

@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
 import TokenContext from '../context/TokenContext'
 import useAuthUser from '../hooks/useAuthUser';
-import useBT from '../hooks/useBT';
+import { useBT } from '../hooks/useBT';
 
 const IconContainerStyles = {
     borderRadius: 50,

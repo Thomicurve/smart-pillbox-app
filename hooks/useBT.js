@@ -135,19 +135,6 @@ const useBT = () => {
         });
     }
 
-    function findSmartPillbox(isEnabled) {
-        if (!isEnabled) { //switch no activado
-            boolFindSmartPillbox = false; //No se buscara el pastillero
-        } else { //switch activado
-            if (!btConectado) { //antes verificar que el celular y pastillero esten contectados
-                console.log("El celular y pastillero deben estar conectados!");
-                return;
-            } else {
-                boolFindSmartPillbox = true; //Si se se buscara el pastillero
-            }
-        }
-    }
-
     useEffect(() => {
         async function bluetooth() {
             // Iniciar modulo bluetooth de la libreria
@@ -172,4 +159,17 @@ const useBT = () => {
     return { findSmartPillbox, isEnabled, toggleSwitch }
 }
 
-export default useBT;
+function findSmartPillbox(isEnabled) {
+    if (!isEnabled) { //switch no activado
+        boolFindSmartPillbox = false; //No se buscara el pastillero
+    } else { //switch activado
+        if (!btConectado) { //antes verificar que el celular y pastillero esten contectados
+            console.log("El celular y pastillero deben estar conectados!");
+            return;
+        } else {
+            boolFindSmartPillbox = true; //Si se se buscara el pastillero
+        }
+    }
+}
+
+export {useBT, findSmartPillbox};

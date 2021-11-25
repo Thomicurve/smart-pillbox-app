@@ -1,4 +1,4 @@
-rootProject.name = 'smart-pillbox-app'
+rootProject.name = 'Smart Pillbox'
 
 apply from: '../node_modules/react-native-unimodules/gradle.groovy'
 includeUnimodulesProjects()

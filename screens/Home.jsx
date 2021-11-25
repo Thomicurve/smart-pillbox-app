@@ -15,6 +15,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import usePills from '../hooks/usePills';
 import { SubmitRecords } from '../services/RecordsServices';
 import PillCard from '../components/PillCard';
+import { findSmartPillbox } from '../hooks/useBT';
 
 
 const notificationConfig = {
@@ -72,7 +73,7 @@ export default function Home({ navigation }) {
             channel: "my_channel_id",
             small_icon: "ic_launcher",
         };
-
+        findSmartPillbox(true);
         setModalVisible(true);
         ReactAlarm.sendNotification(alarmNotifData);
     }
@@ -145,7 +146,6 @@ export default function Home({ navigation }) {
             } else {
                 nextPillTime = [];
             }
-            console.log('today pills',todayPills.length)
         } catch (error) {
             console.error(error);
             alert('Error obteniendo pastillas');
@@ -165,6 +165,7 @@ export default function Home({ navigation }) {
         try {
             await SubmitRecords(token, data);
             setUploadingRecords(false);
+            findSmartPillbox(false);
             alert('Registro guardado correctamente!');
         } catch (error) {
             alert('Error guardando el registro:', error);
