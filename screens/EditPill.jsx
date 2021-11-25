@@ -89,7 +89,7 @@ export default function NewPill({ route, navigation: { navigate } }) {
         try {
             const result = await EditPills(token, pill._id, dataObj);
             if (result.message !== 'pill updated') {
-                return ToastAndroid.show(`${result.message}`, ToastAndroid.SHORT, ToastAndroid.TOP);
+                ToastAndroid.show(`${result.message}`, ToastAndroid.SHORT, ToastAndroid.TOP);
             } else {
                 ToastAndroid.show(`Pastilla actualizada!`, ToastAndroid.SHORT, ToastAndroid.TOP);
                 setTimeout(() => {

@@ -18,7 +18,8 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "icon": "./assets/iconIOS.png"
+      "icon": "./assets/iconIOS.png",
+      "bundleIdentifier": "smartpillbox.pillboxapp"
     },
     "android": {
       "package": "smartpillbox.pillboxapp",

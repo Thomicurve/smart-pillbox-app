@@ -74,7 +74,7 @@ export default function NewPill({ navigation: { navigate } }) {
         try {
             const result = await UploadPills(token, dataObj);
             if (result.message !== 'Pastilla cargada con éxito') {
-                return ToastAndroid.show(`${result.message}`, ToastAndroid.SHORT, ToastAndroid.TOP);
+                ToastAndroid.show(`${result.message}`, ToastAndroid.SHORT, ToastAndroid.TOP);
             } else {
                 ToastAndroid.show(`${result.message}`, ToastAndroid.SHORT, ToastAndroid.TOP);
                 setTimeout(() => {
