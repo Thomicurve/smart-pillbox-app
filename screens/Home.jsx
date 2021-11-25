@@ -28,7 +28,7 @@ const notificationConfig = {
     },
     color: '#072F4E',
     parameters: {
-        delay: 5000,
+        delay: 3000,
     },
 };
 
@@ -39,13 +39,13 @@ let pillTaken = false;
 let pillsRemaining = 0;
 let takeThePill = false;
 const positionSelectedColor = '#F2D06B';
+let modalVisible = false;
 
 export default function Home({ navigation }) {
     const isFocused = useIsFocused();
 
     const [changeReload, setChangeReload] = useState(false);
     const [todayPills, setTodayPills] = useState([]);
-    const [modalVisible, setModalVisible] = useState(false);
     const [uploadingRecords, setUploadingRecords] = useState(false);
     const { token } = useContext(TokenContext);
     const { GetTodayPills, pills } = usePills();
@@ -58,7 +58,7 @@ export default function Home({ navigation }) {
                 ReactAlarm.stopAlarmSound();
                 ReactAlarm.removeAllFiredNotifications();
                 takeThePill = false;
-                schedulePills.shift();
+                schedulePills.length = 1 ? schedulePills = [] : schedulePills.shift();
             }
         }
 
@@ -67,15 +67,18 @@ export default function Home({ navigation }) {
 
     // ENVIAR NOTIFICACIÓN
     const pushNotification = (pill) => {
+
         const alarmNotifData = {
             title: `Debe tomar ${pill.pillName} de las ${pill.pillHour}`,
             message: "Ya es hora de tomar su pastilla",
             channel: "my_channel_id",
             small_icon: "ic_launcher",
         };
-        findSmartPillbox(true);
-        setModalVisible(true);
+        modalVisible = true;
         ReactAlarm.sendNotification(alarmNotifData);
+        findSmartPillbox(true);
+
+
     }
 
 
@@ -117,6 +120,7 @@ export default function Home({ navigation }) {
                     pushNotification(schedulePills[0]);
                     takeThePill = true;
                 }
+
                 await Delay(delay);
             }
         });
@@ -164,8 +168,14 @@ export default function Home({ navigation }) {
     const handleSubmitRecord = async (data) => {
         try {
             await SubmitRecords(token, data);
+            setUploadingRecords(true);
+            modalVisible = false;
+            await Delay(2000);
             setUploadingRecords(false);
             findSmartPillbox(false);
+            pillTaken = !pillTaken;
+            
+            
             alert('Registro guardado correctamente!');
         } catch (error) {
             alert('Error guardando el registro:', error);
@@ -254,15 +264,15 @@ export default function Home({ navigation }) {
                                         Debe tomar {pillsRemaining} pastilla/s</Text>
                                     <View>
                                         <Image style={{ width: 400, height: 270 }} source={renderSmartPillbox} />
-                                        <View style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-around', position: 'absolute', top: 155, width: '100%', right: 80}}>
+                                        <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-around', position: 'absolute', top: 155, width: '100%', right: 80 }}>
                                             <View
-                                                style={[styles.pillSlot, { backgroundColor: schedulePills[0].position == 1 && positionSelectedColor}]}></View>
+                                                style={[styles.pillSlot, { backgroundColor: schedulePills[0].position == 1 && positionSelectedColor }]}></View>
                                             <View
-                                                style={[styles.pillSlot, { backgroundColor: schedulePills[0].position == 2 && positionSelectedColor}]}></View>
+                                                style={[styles.pillSlot, { backgroundColor: schedulePills[0].position == 2 && positionSelectedColor }]}></View>
                                             <View
-                                                style={[styles.pillSlot, { backgroundColor: schedulePills[0].position == 3 && positionSelectedColor}]}></View>
+                                                style={[styles.pillSlot, { backgroundColor: schedulePills[0].position == 3 && positionSelectedColor }]}></View>
                                             <View
-                                                style={[styles.pillSlot, { backgroundColor: schedulePills[0].position == 4 && positionSelectedColor}]}></View>
+                                                style={[styles.pillSlot, { backgroundColor: schedulePills[0].position == 4 && positionSelectedColor }]}></View>
                                         </View>
                                     </View>
                                     <Pressable
@@ -275,9 +285,7 @@ export default function Home({ navigation }) {
                                                 pillHour: moment().format('LT'),
                                                 pillDate: moment().format('L')
                                             })
-                                            pillTaken = !pillTaken;
-                                            setModalVisible(false);
-                                            setUploadingRecords(true)
+
                                         }}
                                     >
                                         <Text style={styles.textStyle}>Ya la tomé!</Text>

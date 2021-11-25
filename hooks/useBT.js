@@ -12,19 +12,6 @@ const useBT = () => {
     const [isEnabled, setIsEnabled] = useState(false); //switch state
     const toggleSwitch = () => setIsEnabled(previousState => !previousState); //switch state
 
-    function findSmartPillbox(isEnabled) {
-        if (!isEnabled) { //switch no activado
-            boolFindSmartPillbox = false; //No se buscara el pastillero
-        } else { //switch activado
-            if (!btConectado) { //antes verificar que el celular y pastillero esten contectados
-                console.log("El celular y pastillero deben estar conectados!");
-                return;
-            } else {
-                boolFindSmartPillbox = true; //Si se se buscara el pastillero
-            }
-        }
-    }
-
     async function researchPillbox() { //Funcion para intentar volver a conectarse al bt
         let loopScan = setInterval(async () => {
             if (!btConectado) { //si el bluetooth esta desconectado seguir escaneando cada 4seg
@@ -62,9 +49,9 @@ const useBT = () => {
             await BleManager.scan([], 2, true).then(() => {
                 console.info("Empezando escaneo...");
             }); //hacer que escanee hasta que encuentre el pastillero
-            await Delay(2000); //esperar 3 segundos
+            await Delay(2000); //esperar 2 segundos
             await BleManager.stopScan().then(() => { //Detener el escaneo
-                console.log("Scan stopped");
+                // ! console.log("Scan stopped");
             });
         } else {
             console.info("Antes de escanear se debe encender el bluetooth.");
@@ -129,7 +116,7 @@ const useBT = () => {
                     }
                 }, 300);
             } else {
-                console.error("Peripheral is NOT connected!");
+                // ! console.error("Peripheral is NOT connected!");
                 btConectado = false;
             }
         });
